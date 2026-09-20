@@ -1,136 +1,106 @@
 # Skills catalogue
 
-*Companion to `roles.md`. Skills follow the open Agent Skills specification (`SKILL.md` with frontmatter; `scripts/`, `references/`, `assets/`; progressive disclosure) and Anthropic's best practices: third-person descriptions with trigger words, gerund names, SKILL.md under 500 lines, deterministic work in scripts, evaluations written before documentation, `disable-model-invocation: true` on anything money-adjacent. Source: `docs/research/2026-09-20-agent-engineering-state-of-the-art.md` §1.*
+*Companion to `roles.md` v2.0. Skills follow the open Agent Skills specification (`SKILL.md` frontmatter; `scripts/`, `references/`, `evals/`; progressive disclosure). Skills are the firm's procedures: they tell a role how to do its job and bundle the deterministic scripts that fetch, compute and record. Skills are written and revised by agents (the Coach and the Skill Engineer) through PRs with evals; the Principal is informed.*
 
 ## 1. Conventions
 
 ```
 skills/<name>/
-  SKILL.md              # frontmatter + workflow (checklist form), ≤ 500 lines
-  scripts/              # deterministic Python; each script has --help, typed args, JSON out, unit tests
-  references/           # gate register excerpts, schemas, enum lists (one level deep)
-  evals/                # ≥ 3 eval cases: {query, files, expected_behavior[], grader}
+  SKILL.md        # frontmatter (name, description, allowed-tools, model, effort, metadata{role, version, trading_impact}) + workflow as a checklist, ≤ 500 lines
+  scripts/        # deterministic helpers (context assembly, validation, recording); typed args; JSON out; unit tests
+  references/     # enums, schemas, playbook excerpts, one level deep
+  evals/          # ≥ 3 cases {query, files, expected_behavior[], grader}; graded on state
 ```
 
-Frontmatter fields used: `name`, `description`, `allowed-tools`, `disable-model-invocation`, `user-invocable`, `model`, `effort`, `hooks`, `metadata: {role, version, trading_impact: none|indirect|direct}`.
+Rules: prompts assembled by scripts contain no anchoring numbers from the system (numbers come from the agent's own calculator calls); external text is labelled as data; every decision skill ends by writing the decision, the instruments used and the forecast to the dossier or memory; every skill's evals run in CI; a skill with `trading_impact: direct` changes only with the Validation Reviewer's verdict.
 
-Rules:
+## 2. Leadership
 
-1. A skill with `trading_impact: direct` changes only with Principal approval (DH2-ORG-002) and carries `disable-model-invocation: true` unless it is the role's core workflow, in which case the role's tool allowlist is the guard.
-2. Every numeric computation lives in a script. SKILL.md may say "run `scripts/size_check.py`", never "compute the stop as …".
-3. Every skill's evals run in CI (promptfoo with the Claude Agent SDK provider, or the SDK's own harness) and grade **state** (a ledger row exists, a section was written, no order was placed), not the transcript.
-4. Prompts assembled by skills contain no anchoring numbers; features are passed as z-scores, buckets or enums produced by scripts.
-5. Scripts that read external text (announcements) treat it as data and never as instructions; SKILL.md says so explicitly.
-
-## 2. Desk Head
-
-| Skill | Purpose | Scripts | Trading impact |
+| Role | Skill | Purpose | Scripts |
 |---|---|---|---|
-| `running-shifts` | Execute a shift definition: check preconditions, invoke roles, collect structured results, record the shift run | `shift_preflight.py`, `record_shift.py` | none |
-| `writing-desk-journal` | Compose the daily journal from structured inputs (sleeve metrics, incidents, costs, approvals) | `journal_data.py` (assembles numbers), `journal_lint.py` (no unapproved claims) | none |
-| `escalating-incidents` | Decide escalation tier from enumerated severity; notify Principal | `notify.py` | none |
+| CIO | `allocating-capital` | Decide desk allocations within the IPS from desk statistics with n/CIs, correlation, capacity | `desk_stats.py`, `apply_allocation.py` |
+| CIO | `chartering-desks` | Write/resize/pause/retire a charter from a proposal and committee minutes | `charter.py validate|apply` |
+| CIO | `chairing-investment-committee` | Run the meeting: agenda, positions, rounds cap, minutes, decisions | `minutes.py` |
+| CIO | `writing-firm-strategy` | Maintain `memory/firm/strategy.md` and the digest's strategy section | — |
+| Risk Office | `reviewing-plans` | Assess a plan: exposure, correlation, liquidity, cost per R, Trader calibration, event window; decide approve/modify/reject with expected effect | `plan_context.py`, `review.py validate` |
+| Risk Office | `supervising-book` | 30-minute sweep: book, rails proximity, reconciliation, notices | `book_snapshot.py`, `notice.py` |
+| Risk Office | `setting-desk-guidance` | Standing guidance per desk (recommended risk per trade, concurrency, correlation limits) | `guidance.py` |
+| Risk Office | `running-risk-conference` | Convene affected roles; decide pauses/guidance changes; minutes | `minutes.py` |
+| Risk Office | `drilling-kill-switch` | Release drill in paper; `disable-model-invocation: true` outside CI/Principal | `drill.py` |
+| Coach | `scoring-decisions` | Read scores; LLM-judge process adherence calibrated against spot checks; write coaching notes | `scores.py`, `judge.py` |
+| Coach | `coaching-roles` | Weekly per-desk session: findings, playbook revisions, eval cases, change requests | `coaching_report.py` |
+| Coach | `revising-playbooks` | Versioned playbook diff with rationale and evidence; run evals before publish | `playbook.py diff|publish`, `evals.py run` |
+| Coach | `curating-lessons` | Adopt/retire lessons with evidence; maintain firm lessons index | `lessons.py` |
 
-## 3. Market Intelligence Analyst
+## 3. Desk roles
 
-| Skill | Purpose | Scripts | Trading impact |
+| Role | Skill | Purpose | Scripts |
 |---|---|---|---|
-| `briefing-market` | Produce `MarketBrief` from code-computed regime inputs and the event calendar | `regime_inputs.py` (breadth, dispersion, vol z-scores), `calendar.py` | indirect (feature) |
-| `tagging-catalysts` | Batch-classify NSE announcements into `CatalystTag` enums with `published_at`; masked symbol ids during historical runs | `fetch_announcements.py`, `tag_batch.py` (calls the classification model with a fixed prompt version; validates against the enum schema), `feature_health.py` | indirect (feature, G4-gated) |
+| Analyst (Technical) | `scanning-technicals` | Scan the desk universe with structure/volatility/liquidity calculators; file ideas with evidence | `scan_context.py`, `file_idea.py` |
+| Analyst (Catalyst) | `reading-catalysts` | Tag announcements/results/corporate actions (batch model), assess relevance to the desk, file ideas | `fetch_announcements.py`, `tag_batch.py`, `file_idea.py` |
+| Analyst (Flow) | `reading-flow` | Depth, turnover, relative volume, index/futures context; file ideas | `flow_context.py`, `file_idea.py` |
+| Analyst (all) | `filing-ideas` | Idea schema, evidence standards, withdrawal | `file_idea.py validate` |
+| Strategist | `forming-theses` | Turn ideas into theses with invalidation and conviction; recall similar theses time-aware | `thesis_context.py`, `thesis.py validate` |
+| Strategist | `debating-bull-bear` | Optional two-round bull/bear pass with Analyst sub-sessions; record both | `debate.py` |
+| Strategist | `dropping-theses` | Drop with reasons; memory note | — |
+| Trader | `planning-trades` | Build the plan: call calculators for candidate stops/targets, cost per R, liquidity; choose; state expected R and probability; cite instruments | `plan_context.py`, `plan.py validate` |
+| Trader | `sizing-positions` | Choose R and quantity with `calc:size`, margin, freeze slices, desk guidance | `size_check.py` |
+| Trader | `working-orders` | Place and work orders through `exec:*`; handle partials, chases, drops | `order_action.py validate` |
+| Trader | `responding-to-risk` | Accept/contest Risk Office modifications; request a chaired resolution | — |
+| Position Manager | `managing-positions` | On each event: hold/adjust/scale with reasoning; set subscriptions; keep the dossier current | `position_context.py`, `action.py validate` |
+| Position Manager | `deciding-carries` | Carry window: convert or exit, with expected overnight effect stated | `carry_context.py` |
+| Position Manager | `exiting-positions` | Exit decisions with reasoning; expected vs mechanical bracket noted | — |
+| Desk Reviewer | `reviewing-trades` | Per-role rubric with counterfactuals; lesson proposals | `review_context.py`, `rubric.py validate` |
+| Desk Reviewer | `reviewing-desk-week` | Weekly desk review; meeting items; playbook suggestions | `week_aggregate.py` |
 
-## 4. Quant Researcher
+## 4. Research Lab
 
-| Skill | Purpose | Scripts | Trading impact |
+| Role | Skill | Purpose | Scripts |
 |---|---|---|---|
-| `researching-hypotheses` | Pick backlog items, consult the idea forest, draft a falsifiable plan | `backlog.py`, `idea_forest.py` | none |
-| `preregistering-trials` | Write and commit `preregistration.md`; validate against schema; compute grid size N | `prereg.py validate|commit` | none |
-| `running-backtests` | Run the simulation kernel for a registered experiment in the sandbox; open/complete ledger rows; fail closed | `backtest.py --experiment` (refuses without registration), `ledger.py open|complete|fail` | none |
-| `reporting-trials` | Produce `TrialReport` with DSR/PSR/MTRL, N, k, cost_R, zero-alpha percentile, stability table | `stats.py`, `calibrate_zero_alpha.py`, `report.py` | none |
-| `proposing-promotion` | Assemble a `PromotionProposal` with evidence refs and the sleeve spec draft | `proposal.py validate` | indirect (enters review) |
+| Quant Researcher | `researching-hypotheses` | Choose backlog items; consult idea forest; design | `backlog.py`, `idea_forest.py` |
+| Quant Researcher | `preregistering-experiments` | Commit registration before running | `prereg.py validate|commit` |
+| Quant Researcher | `running-backtests` | Rule studies and agentic replays through the engine; ledger open/complete | `backtest.py`, `replay_agentic.py`, `ledger.py` |
+| Quant Researcher | `reporting-trials` | DSR/PSR/MTRL, N, k, zero-alpha percentile, stability | `stats.py`, `calibrate_zero_alpha.py`, `report.py` |
+| Data Steward | `curating-universe` | Point-in-time universe, delistings, snapshots | `universe.py`, `snapshot.py` |
+| Data Steward | `defining-features` | Feature definitions and health thresholds | `feature.py define|test` |
+| Data Steward | `checking-data-quality` | Nightly DQ; withheld-feature notices | `dq.py` |
+| Validation Reviewer | `reviewing-proposals` | Adversarial checklist on desk proposals, playbook revisions, lesson adoptions | `checks.py`, `lookahead_shift.py`, `attribution.py` |
+| Validation Reviewer | `auditing-ledger` | Weekly ledger audit | `ledger_audit.py` |
+| Desk Designer | `designing-desks` | Compose a proposal with charter, team, playbook v1, self-declared success criteria | `proposal.py validate` |
+| Desk Designer | `writing-playbooks` | Playbook structure and standards | — |
 
-## 5. Validation Reviewer
+## 5. Operations
 
-| Skill | Purpose | Scripts | Trading impact |
+| Role | Skill | Purpose | Scripts |
 |---|---|---|---|
-| `reviewing-promotions` | Run the 12-check checklist (`research.md` §8); produce `ReviewVerdict` | `checks.py` (each check is a function returning pass/fail + evidence), `lookahead_shift.py`, `attribution.py` | indirect (gate input) |
-| `auditing-ledger` | Weekly ledger audit: trials left `running`, registrations without runs, N/k anomalies | `ledger_audit.py` | none |
+| Operations Engineer | `running-morning-checklist` | Token, egress IP, instrument master, rule tables, feeds, DB/disk; one Principal reminder if no token | `checklist.py`, `notify.py` |
+| Operations Engineer | `diagnosing-incidents` | Bounded logs/metrics; runbook selection from allowlist; escalation | `logs.py`, `runbook.py list|run` |
+| Operations Engineer | `verifying-deploys` | Image tag, migrations, health, drill result | `verify_deploy.py` |
+| Operations Engineer | `writing-incident-reports` | Incident file in ops memory; follow-up PR | `incident.py` |
+| Compliance Auditor | `auditing-compliance` | Order-rate histogram, static IP log, token handling, audit chain, retention, rule versions | `ops_histogram.py`, `audit_chain_verify.py`, `rules_check.py` |
+| Compliance Auditor | `tracking-circulars` | Read circulars; propose dated rule changes as PRs | `circulars.py`, `rules_pr.py` |
+| Skill Engineer | `authoring-skills` | Scaffold with evals first; implement; open PR | wraps `skill-creator` |
+| Skill Engineer | `building-calculators` | New `calc:*` with tests and versioning | `calc_scaffold.py` |
+| Skill Engineer | `writing-evals` | Eval cases from real failures; state graders | `eval_scaffold.py` |
+| Skill Engineer | `releasing` | Release verification checklist; `disable-model-invocation: true` | `release_check.py` |
 
-## 6. Portfolio Manager
-
-| Skill | Purpose | Scripts | Trading impact |
-|---|---|---|---|
-| `allocating-risk` | Choose allocation tiers from the governor's feasible set with correlation and MTRL context | `feasible_set.py`, `apply_tiers.py` (bounded engine tool) | direct (bounded) |
-| `reviewing-portfolio` | Monthly and emergency review: correlation matrix, DSR progress, capacity, decay flags | `portfolio_report.py` | indirect |
-
-## 7. Trade Manager
-
-| Skill | Purpose | Scripts | Trading impact |
-|---|---|---|---|
-| `vetting-candidates` | Read the dossier (engine section, similar trades embargo-safe, brief, catalyst tags for the symbol, exposure overlap enum); output `VetVerdict` | `dossier_context.py` (assembles the categorical context; strips numbers), `verdict.py validate` | direct (A/B-measured) |
-| `managing-open-trades` | Respond to invalidation events with `HoldAction`; record hold notes | `event_context.py`, `hold_action.py validate` | direct (enumerated reasons only) |
-| `writing-dossier-narrative` | Append thesis/notes to own section; summarise for the reviewer at close | `write_section.py` | none |
-
-`vetting-candidates` SKILL.md contains the veto-reason enum and the explicit instruction that a `take` is the default when no enumerated veto applies (v1 lesson: structural "don't trade" biases). It never shows day P&L, rankings, or prices.
-
-## 8. Risk Officer
-
-| Skill | Purpose | Scripts | Trading impact |
-|---|---|---|---|
-| `supervising-risk` | Sweep policy outcomes, exposures, governor actions, reconciliation state; produce `RiskAssessment`; act within enumerated authority | `risk_snapshot.py`, `act.py pause|kill` (calls bounded engine tools) | direct (pause/kill) |
-| `drilling-kill-switch` | Run the three-level drill in paper; verify flatten; record | `drill.py` | direct; `disable-model-invocation: true` (CI and Principal only) |
-| `reviewing-cost-calibration` | Weekly cost_R per sleeve, edge-to-cost ratios, spread statistics | `cost_report.py` | indirect (feeds DH2-RSK-005 auto-pause) |
-| `reviewing-veto-arm` | Weekly veto vs shadow expectancy difference with t-stat | `veto_ab.py` | indirect (G4 evidence) |
-
-## 9. Post-Trade Reviewer
-
-| Skill | Purpose | Scripts | Trading impact |
-|---|---|---|---|
-| `reviewing-trades` | Per closed dossier: rubric (thesis, execution, process, luck vs skill), lesson candidate | `review_context.py`, `rubric.py validate` | none |
-| `reviewing-week` | Aggregate reviews; propose hypotheses to the backlog and lessons (status `hypothesis`) | `week_aggregate.py`, `backlog.py add`, `propose_lesson.py` | none |
-
-## 10. Operations Engineer
-
-| Skill | Purpose | Scripts | Trading impact |
-|---|---|---|---|
-| `running-morning-checklist` | Token present, egress IP matches, instrument master fresh, feeds healthy, rule tables valid for today, disk/DB health; remind Principal to log in | `checklist.py` (each check deterministic), `notify.py` | indirect |
-| `checking-data-quality` | Feature degeneracy tests, bar completeness, announcement feed freshness, universe as-of consistency | `dq.py` | indirect (withholds degenerate features) |
-| `diagnosing-incidents` | Bounded log/metric reads; runbook selection; escalation | `logs.py --window --filter`, `runbook.py list|run <allowlisted>` | none |
-| `verifying-deploys` | Post-deploy: image tag, migrations applied, health, kill drill result | `verify_deploy.py` | none |
-| `writing-incident-reports` | Structured incident write-up into ops memory; open follow-up PR | `incident.py` | none |
-
-Runbooks are scripts under `skills/diagnosing-incidents/scripts/runbooks/` with an allowlist in the role definition (restart a stalled ticker, re-run instrument fetch, re-run reconciliation, rotate logs). Anything else escalates.
-
-## 11. Compliance Auditor
-
-| Skill | Purpose | Scripts | Trading impact |
-|---|---|---|---|
-| `auditing-compliance` | OPS histogram, static IP log, single-session check, audit-chain verification, retention, rule-table versions | `ops_histogram.py`, `audit_chain_verify.py`, `rules_check.py` | none |
-| `tracking-circulars` | Read new SEBI/NSE/Zerodha circulars; propose rule-table changes with effective dates as a PR | `circulars.py fetch`, `rules_pr.py` | indirect (rules via PR) |
-
-## 12. Shared skills
-
-| Skill | Purpose | Scripts |
-|---|---|---|
-| `recalling-memory` | Embargo-safe retrieval of similar trades and in-scope lessons; logs the retrieval | `recall.py --as-of` |
-| `writing-memory` | Append to own role memory; propose lessons; lint for secrets and numbers | `memory_write.py`, `memory_lint.py` |
-| `reading-desk-knowledge` | Locate reference documents and rule tables | `desk_index.py` |
-| `using-engine-tools` | Reference for the typed engine tools and their reason enums (background knowledge, `user-invocable: false`) | — |
-
-## 13. Developer-side skills (design time)
+## 6. Shared
 
 | Skill | Purpose |
 |---|---|
-| `implementing-feature-spec` | Read `specs/NNN/`, create tasks, implement with tests, cite requirement ids in the PR |
-| `writing-feature-spec` | Create `specs/NNN-<name>/` from a backlog item with EARS requirements and acceptance scenarios |
-| `authoring-skill` | Scaffold a skill with evals first (wraps `skill-creator`) |
-| `releasing` | Tag, CI verification, deploy runbook, kill drill evidence; `disable-model-invocation: true` |
+| `recalling-memory` | Time-aware recall of similar trades/theses/lessons; logs retrieval |
+| `writing-memory` | Append to own memory; propose lessons; secrets/anchoring linter |
+| `attending-meetings` | Meeting protocol: stating a position, rounds, minutes |
+| `using-firm-tools` | Reference for typed tools and decision schemas (`user-invocable: false`) |
 
-## 14. Skill evaluation standard
+## 7. Evaluation standard
 
-Each skill ships ≥ 3 evals derived from real v1 failures where possible:
+Each skill ships ≥ 3 evals graded on environment state, several from v1 failures:
 
-- `vetting-candidates`: (a) results announcement in 45 minutes → `veto: results_within_window`; (b) quiet market, no catalyst, clean data → `take` (guards against "decline everything"); (c) unparseable engine payload → `REVIEW`, no tool call.
-- `running-backtests`: (a) missing registration → exit non-zero before data load; (b) extra parameter → refused; (c) crash mid-run → trial marked `failed`.
-- `running-morning-checklist`: (a) no token → one Principal reminder, desk `awaiting_login`; (b) IP mismatch → `broker_state` set, alert; (c) all green → checklist complete, no notification.
-- `supervising-risk`: (a) desk drawdown at limit → level-2 kill via tool with reason; (b) exit denied by policy → alert, no other action; (c) normal sweep → no action, assessment written.
+- `planning-trades`: (a) calculators called and cited, expected R and probability present; (b) plan inside IPS and desk capital; (c) unparseable thesis → `REVIEW`, no order.
+- `reviewing-plans`: (a) exposure over guidance → `modify` with reasons; (b) inside guidance → `approve` within deadline; (c) rail-proximity → notice issued.
+- `managing-positions`: (a) subscribed milestone → decision with reasoning and expected effect; (b) catalyst event → decision recorded; (c) service restart → prior actions in context.
+- `running-backtests`: (a) no experiment id → refused; (b) crash → trial `failed`; (c) result carries N and k.
+- `running-morning-checklist`: (a) no token → one reminder; (b) IP mismatch → state and alert; (c) all green → no notification.
 
-Evals grade environment state; pass^k (k = 5) is required for ops and risk skills.
+pass^5 required for operations, risk and execution-adjacent skills.

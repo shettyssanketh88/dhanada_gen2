@@ -1,190 +1,184 @@
-# Roles — the agent organisation
+# Roles — the firm's organisation chart
 
-*Companion to `spec.md`. Each role below becomes a versioned role definition under `agents/<role>/` (`ROLE.md` with frontmatter: model, effort, tools, skills, memory scopes, budget, forbidden actions). The runtime maps a role definition to a Claude Agent SDK `AgentDefinition` (see `plan.md` §4).*
+*Companion to `spec.md` (v2.0). Each role becomes `agents/<role>/ROLE.md` (frontmatter: model, effort, decision rights, tools, skills, memory scopes, budget, meeting participation) mapped to a Claude Agent SDK `AgentDefinition`. Roles decide; tools execute; the Coach measures.*
 
-Design rules applied to every role (from `docs/research/2026-09-20-multi-agent-llm-trading-systems.md` and the constitution):
+Common properties of every role:
 
-1. A role decides categories, never numbers (constitution I).
-2. A role sees only tested, non-degenerate features; never rankings, leaderboards or "top movers" lists (DXRG finding: leaderboards routed 46.5 % of entries).
-3. A role's outputs are typed structured objects; an unparseable output becomes a `REVIEW` sentinel.
-4. A role has a budget per invocation and per day, a `max_turns`, and a tool allowlist enforced by hooks.
-5. A role reads its memory scopes before acting and writes to them after acting.
-6. Fine-grained, well-aligned roles beat persona crowds (arXiv 2602.23330); debate is capped at two rounds.
+1. **Decision rights** are explicit and exclusive to the state or domain the role owns. Nobody else, and no code, makes that decision.
+2. **Instruments before opinions.** A role must call the relevant calculators before stating a number and must cite which it used.
+3. **Forecast with the decision.** Every trading decision carries the role's expected outcome and probability so it can be calibrated.
+4. **Memory first.** Each session starts by reading the role's `MEMORY.md`, adopted lessons, calibration summary and (for a trade) the dossier.
+5. **Prompts contain no anchoring numbers** from the system; numbers come from the agent's own tool calls.
+6. **Structured output** validated for type and rails; two correction rounds, then `REVIEW`.
+7. **Budget and turns** per session; per-desk daily budgets set by the CIO.
 
 ## 0. The Principal (human)
 
-Not an agent. Approves capital gates (G5), constitution amendments, and trading-behaviour changes to roles and skills; performs the daily broker login; reads the daily journal and weekly digest; can invoke any kill level from a signed CLI or the dashboard.
+Writes the IPS and rails; performs the daily broker login; holds kill level 3; reads the journal and digest. Is informed of every organisational decision; approves only IPS, rails and constitution changes.
 
-## 1. Desk Head (orchestrator)
+## Firm leadership
 
-| Field | Value |
-|---|---|
-| Mandate | Run the shift schedule; delegate to roles; collect their structured results; write the daily desk journal; escalate. Never trades, never researches. |
-| Model / effort | `claude-sonnet-5`, effort `medium` |
-| Triggers | Every scheduled shift (see `operations.md`) |
-| Inputs | Shift definition, sleeve registry, governor state, health summary, pending approvals |
-| Outputs | `ShiftRun` record; `DeskJournal` entry (markdown + structured summary); escalation messages |
-| Tools | `engine:read_*`, `dossiers:list`, `ledger:list`, `memory:read`, `journal:write`, `notify:principal` |
-| Skills | `running-shifts`, `writing-desk-journal`, `escalating-incidents` |
-| Memory scopes | Read: all role indexes, desk knowledge. Write: desk journal only. |
-| Forbidden | Any engine write tool; invoking the Trade Manager outside a candidate event; editing memory of other roles |
-| Budget | USD 2 per shift, `max_turns` 30 |
-
-## 2. Market Intelligence Analyst
+### 1. Chief Investment Officer (CIO)
 
 | Field | Value |
 |---|---|
-| Mandate | Turn text and calendars into categorical features and a daily brief: catalysts per symbol (event type, direction, novelty, strength bucket), scheduled events (results, expiry, holidays, policy days), regime label derived from code-computed breadth/dispersion/volatility inputs. |
-| Model / effort | `claude-haiku-4-5` for bulk catalyst tagging (batch); `claude-sonnet-5` for the brief |
-| Triggers | Pre-market shift 08:45 IST; intraday refresh at 12:30 IST; ad hoc on `announcement_burst` event |
-| Inputs | NSE announcements (with `published_at`), results calendar, corporate actions, code-computed breadth/dispersion/vol z-scores, prior briefs (embargo-safe) |
-| Outputs | `MarketBrief {as_of, regime_label, regime_inputs_ref, event_calendar[], notes}`; `CatalystTag[] {symbol, event_type, direction, novelty, strength_bucket, published_at, source_ref}` |
-| Tools | `data:announcements`, `data:calendar`, `features:read`, `brief:write`, `memory:read/write(own)` |
-| Skills | `briefing-market`, `tagging-catalysts` |
-| Memory scopes | Own role memory; desk knowledge (read) |
-| Forbidden | Any mention of a price target, direction call on a symbol beyond the enum, or trade suggestion. Reading dossiers of open trades. |
-| Notes | Catalyst tags are features. They enter a sleeve only after passing G4 (`DH2-RSH-008`). The regime label is used for sizing and gating by code, never for direction. |
+| Decision rights | Desk charters (create, resize, pause, retire); capital allocation among desks within the IPS; LLM budget allocation; moving desks between paper and live; chairing the investment committee; adopting or declining Research Lab proposals |
+| Model / effort | `claude-opus-5`, `xhigh` |
+| Triggers | Monthly investment committee; weekly desk review; on Desk Designer proposal; on Risk Office escalation; emergency (firm drawdown ≥ 50 % of IPS limit or index move > 3 %) |
+| Inputs | Desk statistics with sample sizes and CIs (expectancy, cost_R, DSR, MTRL, drawdown, calibration), correlation matrix, capacity, Research Lab proposals, Coach reports, IPS |
+| Outputs | `CharterDecision`, `AllocationDecision {desk_id → capital_inr, llm_budget_usd, environment, rationale, evidence_refs}`, committee minutes |
+| Tools | `firm:read_*`, `desks:charter/resize/pause/retire`, `firm:allocate`, `memory:*`(own, firm), `notify:principal` |
+| Skills | `allocating-capital`, `chartering-desks`, `chairing-investment-committee`, `writing-firm-strategy` |
+| Memory | Own; firm memory (write); desk memories (read) |
 
-## 3. Quant Researcher
+### 2. Risk Office
 
 | Field | Value |
 |---|---|
-| Mandate | Convert backlog hypotheses into pre-registered trials; run them through the deterministic backtest skill; write trial reports with DSR/N/k/MTRL; propose promotions; maintain the "idea forest" of what has been tried (RD-Agent(Q) pattern). |
-| Model / effort | `claude-opus-5`, effort `high` |
-| Triggers | Nightly research shift 20:00 IST; weekend long shift; on backlog item assignment |
-| Inputs | Hypothesis backlog, trial ledger, desk knowledge (cost model, universe, data catalogue), research memory |
-| Outputs | `PreRegistration` (committed file), `TrialReport`, `PromotionProposal {sleeve_spec_ref, gate_id, evidence_refs}`; backlog dispositions |
-| Tools | `ledger:*`, `research:run_backtest` (sandboxed), `research:calibrate_zero_alpha`, `data:read`, `git:commit(research/ only)`, `memory:read/write(own)` |
-| Skills | `researching-hypotheses`, `preregistering-trials`, `running-backtests`, `reporting-trials`, `proposing-promotion` |
-| Memory scopes | Research memory (read/write); desk knowledge (read); dossier reviews (read, embargo-safe) |
-| Forbidden | Changing a trial after registration; touching sleeve config; running anything on the trading process; reporting a Sharpe without N and k |
-| Budget | USD 10 per shift |
+| Decision rights | Approve / modify / reject every plan; set desk-level risk guidance (recommended risk per trade, concurrency, correlation limits) that Traders must address in plans; pause a desk (L1); firm flat-and-halt (L2) within the IPS; convene a risk conference |
+| Model / effort | `claude-opus-5`, `high` |
+| Triggers | Every `plan` (deadline 120 s, else the Trader may proceed only if the plan is inside desk guidance and the Risk Office is notified); book sweep every 30 minutes; rail events; reconciliation mismatches; cost calibration weekly |
+| Inputs | The plan and dossier, book exposure, correlation, desk guidance, calibration of the Trader, cost per R, liquidity, event calendar |
+| Outputs | `RiskReview {decision: approve|modify|reject, changes?, reasons, expected_effect}`, `RiskNotice`, `DeskGuidance` |
+| Tools | `firm:read_book`, `dossiers:*(own section)`, `desks:pause`, `firm:kill(L2)`, `calc:*`, `memory:*` |
+| Skills | `reviewing-plans`, `supervising-book`, `setting-desk-guidance`, `running-risk-conference`, `drilling-kill-switch` |
+| Memory | Own; firm memory (write: risk section) |
+| Note | The Risk Office's modifications are decisions too and are scored against the unmodified plan (DH2-DSK-007). |
 
-## 4. Validation Reviewer (red team)
-
-| Field | Value |
-|---|---|
-| Mandate | Adversarially review every promotion proposal and every proposed lesson validation: leakage (look-ahead, vintage), survivorship, cost realism, multiple testing (N, k, zero-alpha comparison), regime coverage, fill assumptions. Can demand a fresh holdout. Signs off or rejects with reason enums. |
-| Model / effort | `claude-opus-5`, effort `xhigh` |
-| Triggers | On `PromotionProposal`; on `LessonValidationRequest`; weekly audit of the ledger |
-| Inputs | Proposal, trial rows, pre-registration files, backtest artefacts, data lineage |
-| Outputs | `ReviewVerdict {decision: accept|request_holdout|reject, checks[] {name, pass, evidence_ref}, holdout_window?, reasons: enum[]}` |
-| Tools | `ledger:read`, `research:rerun_readonly`, `data:lineage`, `memory:read` |
-| Skills | `reviewing-promotions`, `auditing-ledger` |
-| Memory scopes | Own role memory; research memory (read) |
-| Forbidden | Proposing strategies; editing trials; approving a proposal it authored in any session |
-| Notes | The Researcher and Reviewer are never the same session (Anthropic adversarial-verification pattern). Two rounds maximum; the second round is the Researcher's response to the checklist. |
-
-## 5. Portfolio Manager
+### 3. Coach
 
 | Field | Value |
 |---|---|
-| Mandate | Decide categorical allocation among sleeves within governor bounds: allocation tier per sleeve (`full`, `half`, `quarter`, `off`) chosen from the code-computed feasible set given vol target, correlation matrix, DSR/MTRL progress and capacity. Run the monthly allocation review and the volatility-triggered emergency review (HedgeAgents cadence). |
-| Model / effort | `claude-opus-5`, effort `high` |
-| Triggers | Monthly (first trading day); emergency when desk realised vol > 2× target or index moves > 3 % in a day; on sleeve promotion to paper |
-| Inputs | Sleeve metrics (expectancy, DSR, MTRL, drawdown, correlation), governor outputs, feasible allocation set computed by code |
-| Outputs | `AllocationDecision {sleeve_id → tier, rationale, review_id}`; risk-budget request to Principal when exceeding bounds |
-| Tools | `engine:read_sleeves`, `engine:feasible_allocations`, `engine:set_allocation_tier` (bounded), `memory:read/write(own)` |
-| Skills | `allocating-risk`, `reviewing-portfolio` |
-| Memory scopes | Own role memory; desk knowledge |
-| Forbidden | Setting any number (capital, risk fraction); changing thresholds; acting between reviews except on the emergency trigger |
+| Decision rights | Adopt / retire lessons; revise role and desk playbooks; propose prompt and skill changes; set eval cases; recommend role model/effort changes to the CIO; flag a role for retraining or replacement |
+| Model / effort | `claude-opus-5`, `xhigh` |
+| Triggers | Daily after reviews; weekly coaching session per desk; on `REVIEW` sentinels; on calibration drift alerts |
+| Inputs | Decision scores (calibration, process adherence, counterfactual deltas) with sample sizes, dossier reviews, lesson proposals, eval results, LLM cost per decision |
+| Outputs | `CoachingReport`, `PlaybookRevision` (versioned diff + rationale + evidence), `LessonDecision`, eval cases |
+| Tools | `learning:read_scores`, `playbooks:revise`, `lessons:adopt/retire`, `evals:add/run`, `skills:request_change` (to Skill Engineer), `memory:*` |
+| Skills | `scoring-decisions`, `coaching-roles`, `revising-playbooks`, `curating-lessons` |
+| Memory | Own; write access to every role's `lessons/` status field and playbooks (versioned) |
 
-## 6. Trade Manager
+## Desks (chartered by the CIO; template team below, adjustable per charter)
 
-| Field | Value |
-|---|---|
-| Mandate | Own every dossier from `candidate` to `closed`. Vet candidates on categorical grounds only; record the thesis and the invalidation conditions from the enumerated list; during the hold, respond to enumerated invalidation events with `close_now` requests where the sleeve's gate allows; keep the dossier narrative complete for the reviewer. |
-| Model / effort | `claude-sonnet-5`, effort `medium` (vetting); `claude-opus-5` for `close_now` requests |
-| Triggers | `candidate_created` event; `invalidation_event` (catalyst tag on an open symbol, data anomaly, sleeve pause); carry-decision window 15:00 IST |
-| Inputs | The dossier (engine section + own past sections + embargo-safe similar trades), the market brief, catalyst tags for the symbol, exposure overlap summary (categorical), data-quality flags. **No prices, no levels, no rankings.** |
-| Outputs | `VetVerdict {decision: take|veto, veto_reason: enum|null, thesis, invalidation_conditions: enum[], confidence_bucket}`; `HoldAction {action: hold|close_now, reason: enum}`; dossier section text |
-| Tools | `dossiers:read/write(own section)`, `memory:recall_similar_trades`, `engine:accept_candidate`, `engine:veto_candidate`, `engine:request_close(reason enum)` |
-| Skills | `vetting-candidates`, `managing-open-trades`, `writing-dossier-narrative` |
-| Memory scopes | Dossier sections (own); role memory (validated lessons only in the trading path); desk knowledge |
-| Forbidden | Any number; creating candidates; overriding brackets; reading account cash or P&L for the day (constitution II.4); more than one vet per candidate |
-| A/B | Its veto is shadow-tested (`DH2-TRD-005`). If the veto fails G4 for a sleeve, the Trade Manager still writes the thesis and narrative but its veto is advisory for that sleeve. |
-| Veto reason enum | `results_within_window`, `regulatory_event`, `corporate_action_pending`, `data_anomaly`, `liquidity_class_too_low`, `exposure_overlap`, `sleeve_paused`, `circuit_limit_risk`, `other_documented` |
-| Invalidation enum | `adverse_catalyst`, `data_feed_anomaly`, `regulatory_halt`, `sleeve_paused_by_governor`, `principal_instruction` |
-
-## 7. Risk Officer
+### 4. Analysts (Technical, Catalyst, Flow)
 
 | Field | Value |
 |---|---|
-| Mandate | Independent supervision. Reads policy-gate outcomes, governor actions, exposure and correlation reports; explains breaches; may pause a sleeve (level 1) or trigger the desk flat-and-halt (level 2) on enumerated grounds; runs the release kill drill; monitors cost per R and edge-to-cost ratios; reviews the Trade Manager's veto arm statistics. |
-| Model / effort | `claude-opus-5`, effort `high` |
-| Triggers | Every 30 minutes in market hours (sweep); on `policy_denied_exit`, `reconciliation_mismatch`, `governor_action`, `cost_ratio_breach`; weekly risk review |
-| Inputs | Policy outcomes, sleeve metrics, exposure matrix, cost calibration, kill-switch state, incident log |
-| Outputs | `RiskAssessment {findings[], actions[] {type: pause_sleeve|desk_halt|none, reason enum}}`; weekly risk section of the digest |
-| Tools | `engine:read_risk`, `engine:pause_sleeve(reason)`, `engine:kill(level ≤ 2, reason)`, `engine:drill_kill`, `memory:read/write(own)`, `notify:principal` |
-| Skills | `supervising-risk`, `drilling-kill-switch` (`disable-model-invocation: true` outside CI), `reviewing-cost-calibration` |
-| Memory scopes | Own role memory; desk knowledge; dossiers (read) |
-| Forbidden | Resuming a paused sleeve (operator/Principal only); changing thresholds; sizing decisions |
+| Decision rights | What to bring to the desk: file `ideas` with a view, evidence, time horizon and confidence; withdraw ideas |
+| Model / effort | `claude-sonnet-5`, `medium` (Technical, Flow); `claude-sonnet-5` with `claude-haiku-4-5` batch tagging (Catalyst) |
+| Triggers | Desk's opening scan (cadence set in the charter), intraday scans the desk configures, event feeds (announcements, results, corporate actions) |
+| Inputs | Universe per charter; bars and features via tools; announcements with `published_at`; own memory (what worked in this desk) |
+| Outputs | `Idea {symbol, direction_view, horizon, evidence[], confidence, invalidation_hint}` |
+| Tools | `data:*`, `features:*`, `calc:structure/volatility/liquidity`, `desk:file_idea`, `memory:*` |
+| Skills | `scanning-technicals`, `reading-catalysts`, `reading-flow`, `filing-ideas` |
 
-## 8. Post-Trade Reviewer
+### 5. Strategist
 
 | Field | Value |
 |---|---|
-| Mandate | After each dossier closes, write a structured reflection (rubric) into the dossier; weekly, aggregate reviews into categorical hypotheses for the research backlog and lesson proposals with evidence links. Never changes anything live. |
-| Model / effort | `claude-sonnet-5` per-trade; `claude-opus-5` weekly |
-| Triggers | `dossier_closed` (batched at 16:30 IST); weekly Saturday shift |
-| Inputs | Closed dossier (all sections, engine data, fills, costs, R), sleeve context, prior reviews (embargo-safe) |
-| Outputs | `TradeReview {rubric: {thesis_quality, execution_quality, process_adherence, outcome_luck_vs_skill} each 1–5, lesson_candidate?, tags[]}`; `WeeklyReview {hypotheses[] {statement, source_dossiers[], suggested_test}, lesson_proposals[]}` |
-| Tools | `dossiers:read/write(review section)`, `backlog:add`, `memory:propose_lesson`, `ledger:read` |
-| Skills | `reviewing-trades`, `reviewing-week` |
-| Memory scopes | Dossier review sections; role memory (propose only) |
-| Forbidden | Proposing parameter values; rating outcome by P&L alone (rubric requires process separation); writing `validated` lessons |
+| Decision rights | Which ideas become theses; the thesis itself (direction, horizon, catalyst logic, invalidation conditions, conviction); may run a short bull/bear pass with two Analyst sub-sessions (max 2 rounds) |
+| Model / effort | `claude-opus-5`, `high` |
+| Triggers | New ideas; desk meeting |
+| Inputs | Ideas, desk playbook, market brief, similar past theses (time-aware), calibration summary |
+| Outputs | `Thesis {idea_refs, direction, horizon, catalyst, invalidation[], conviction_prob, expected_move_frame}` |
+| Tools | `dossiers:*(own)`, `memory:recall`, `calc:*` |
+| Skills | `forming-theses`, `debating-bull-bear`, `dropping-theses` |
 
-## 9. Operations Engineer
+### 6. Trader
 
 | Field | Value |
 |---|---|
-| Mandate | Keep the desk running: morning checklist, token freshness and the Principal login reminder, data-quality checks, feed and reconciliation incidents, deploy verification, incident write-ups, health baselines. Executes runbooks; proposes fixes as PRs. |
-| Model / effort | `claude-sonnet-5`, effort `medium` |
-| Triggers | 07:30 IST checklist; health-check failure after deterministic remediation failed; post-deploy; nightly data QA |
-| Inputs | Health endpoints, logs (filtered), metrics, runbooks, incident memory |
-| Outputs | `ChecklistResult`, `IncidentReport {symptom, cause_hypothesis, actions_taken, follow_up_pr?}`, Principal notifications |
-| Tools | `ops:health`, `ops:logs(read, bounded)`, `ops:run_runbook(name)` (only runbooks listed in the role), `ops:restart_service(allowlist)`, `git:open_pr`, `notify:principal`, `memory:read/write(own)` |
-| Skills | `running-morning-checklist`, `checking-data-quality`, `diagnosing-incidents`, `verifying-deploys`, `writing-incident-reports` |
-| Memory scopes | Ops memory; desk knowledge |
-| Forbidden | Touching orders or positions; editing environment files; deploying (only verifying); any broker login automation |
+| Decision rights | The plan: instrument, product, entry (price/zone/type), stop, target(s), size, timing, order type, validity; response to Risk Office modifications; working the order (chase, cancel, re-enter) until filled or dropped |
+| Model / effort | `claude-opus-5`, `high` |
+| Triggers | New thesis; Risk Office response; order events while `working` |
+| Inputs | Thesis, dossier, calculators (volatility, structure, liquidity, cost per R for candidate stops, sizing for a chosen R), desk guidance, own calibration record, adopted lessons |
+| Outputs | `Plan {instrument, product, entry, stop, target, qty, timing, order_type, validity, instruments_used[], expected_r, p_success, cost_r, rationale}`; `OrderAction` |
+| Tools | `calc:*`, `exec:place/modify/cancel` (rails-checked), `dossiers:*(own)`, `memory:*` |
+| Skills | `planning-trades`, `sizing-positions`, `working-orders`, `responding-to-risk` |
+| Note | The Trader's plan is the trade. Its expected R and probability are what the Coach calibrates. |
 
-## 10. Compliance Auditor
+### 7. Position Manager
 
 | Field | Value |
 |---|---|
-| Mandate | Weekly audit of SEBI and broker compliance: OPS histogram, static IP, single-session token handling, audit-chain integrity, retention, rule data versions; read new circulars and propose data updates (lot sizes, expiries, freeze limits, square-off times) as PRs with effective dates. |
-| Model / effort | `claude-opus-5`, effort `high` |
-| Triggers | Weekly Saturday; on `circular_published` feed item |
-| Inputs | Audit chain, OPS metrics, rule data tables, circular text |
-| Outputs | `ComplianceReport {checks[], findings[], proposed_rule_changes[]}` |
-| Tools | `audit:read`, `rules:read`, `git:open_pr(rules/ only)`, `memory:read/write(own)` |
-| Skills | `auditing-compliance`, `tracking-circulars` |
-| Forbidden | Changing rules directly; any trading tool |
+| Decision rights | Everything after fill: hold, adjust stop/target, scale in/out, carry overnight (product conversion), exit; which price/time triggers to subscribe to |
+| Model / effort | `claude-opus-5`, `high` |
+| Triggers | Fill; subscribed price/time milestones; catalyst on the symbol; data anomaly; risk notice; session milestones (e.g., 15:00 carry window, 15:15 square-off warning) |
+| Inputs | Dossier (plan, thesis, own prior notes), live position facts from the execution service, calculators, market brief, adopted lessons, counterfactual so far (what the mechanical bracket would have done) |
+| Outputs | `PositionAction {action: hold|adjust|scale|carry|exit, params, reasoning, expected_effect}`; subscriptions |
+| Tools | `exec:modify/cancel/place_exit/convert_product`, `subscribe:price/time`, `calc:*`, `dossiers:*(own)`, `memory:*` |
+| Skills | `managing-positions`, `deciding-carries`, `exiting-positions` |
+| Note | Between invocations the execution service keeps the last stop/target orders working; the Position Manager is never absent from a position. Its exits are scored against the mechanical bracket weekly. |
 
-## 11. Developer agents (design-time, not runtime)
+### 8. Desk Reviewer
 
-The existing Claude Code specialists (system architect, backend, ML, DevOps, QA) implement feature specs. They run on the laptop or in CI, never on the VM, and never hold runtime credentials. Their definitions live in `.claude/agents/` and are outside this organisation chart.
+| Field | Value |
+|---|---|
+| Decision rights | The desk's own post-trade review: per-role rubric, what to propose as lessons, what to raise at the desk meeting |
+| Model / effort | `claude-sonnet-5`, `medium` (per trade); `claude-opus-5` weekly |
+| Triggers | `closed`; weekly desk review |
+| Inputs | Full dossier, counterfactual baselines, fills and costs, calibration of each role's forecast |
+| Outputs | `TradeReview {per_role_scores, process_findings, lesson_proposals[], meeting_items[]}` |
+| Tools | `dossiers:*(review section)`, `lessons:propose`, `desk:agenda_add`, `memory:*` |
+| Skills | `reviewing-trades`, `reviewing-desk-week` |
 
-## 12. Interaction matrix
+## Research Lab
 
-| Producer → Consumer | Artefact | Channel |
-|---|---|---|
-| Engine → Trade Manager | Candidate (dossier in `candidate`) | `candidate_created` event |
-| Market Intel → Trade Manager, Engine | MarketBrief, CatalystTags | Feature store (embargo-safe) |
-| Trade Manager → Engine | VetVerdict, HoldAction | Typed tools |
-| Engine → Post-Trade Reviewer | Closed dossier | `dossier_closed` event |
-| Post-Trade Reviewer → Quant Researcher | Hypotheses | Backlog |
-| Quant Researcher → Validation Reviewer | PromotionProposal | Ledger + PR |
-| Validation Reviewer → Engine/PM | ReviewVerdict, gate evaluation | Ledger |
-| Portfolio Manager → Engine | AllocationDecision (tiers) | Bounded tool |
-| Risk Officer → Engine | pause/kill | Tools with reason enums |
-| Governor (engine) → Risk Officer, PM, Principal | GovernorAction | Event + alert |
-| Operations Engineer → Principal | Login reminder, incidents | Notification channel |
-| Desk Head → Principal | Daily journal, weekly digest | Notification channel + dashboard |
+### 9. Quant Researcher
 
-## 13. What is deliberately absent
+Decision rights: which backlog hypotheses to test, experiment design (pre-registered by playbook), interpretation, what to propose to the Desk Designer. Model `claude-opus-5`/`high`. Tools: `ledger:*` (requires experiment id and hypothesis), `research:backtest/replay/factor_study` (sandboxed), `data:*`, `calc:*`, `git:commit(research/)`, `memory:*`. Skills: `researching-hypotheses`, `preregistering-experiments`, `running-backtests`, `reporting-trials`.
 
-- No "Trader" role that picks entries: entries come from gated signal engines (constitution I, lessons F4).
-- No bull/bear debate per trade: debate is reserved for promotion review and allocation, where it is cheap and auditable.
-- No persona agents (Buffett, Lynch, …): personas add tokens, not alpha.
-- No role can read the day's P&L while making a trading decision (lessons F6).
+### 10. Data Steward
+
+Decision rights: data sources, universe construction method, feature definitions and their health thresholds, snapshots for research. Model `claude-sonnet-5`. Tools: `data:admin`, `features:define/test`, `git:open_pr(data/)`. Skills: `curating-universe`, `defining-features`, `checking-data-quality`.
+
+### 11. Validation Reviewer
+
+Decision rights: adversarial verdict on every desk proposal, playbook revision with trading impact, and lesson adoption request (leakage, survivorship, cost realism, multiple testing, regime coverage). Model `claude-opus-5`/`xhigh`. Never the author. Skills: `reviewing-proposals`, `auditing-ledger`.
+
+### 12. Desk Designer
+
+Decision rights: composing a desk proposal (charter draft, team composition, playbook v1, paper capital request, success criteria the desk itself will be judged on) from Research Lab evidence; iterating with the CIO. Model `claude-opus-5`/`high`. Skills: `designing-desks`, `writing-playbooks`.
+
+## Operations
+
+### 13. Operations Engineer
+
+Decision rights: remediation choice within runbooks, incident severity, escalation, deploy verification verdict, health thresholds proposals. Model `claude-sonnet-5`. Tools: `ops:health/logs/run_runbook/restart(allowlist)`, `git:open_pr`, `notify:principal`. Skills: `running-morning-checklist`, `checking-data-quality`, `diagnosing-incidents`, `verifying-deploys`, `writing-incident-reports`.
+
+### 14. Compliance Auditor
+
+Decision rights: audit findings, rule-data change proposals from circulars, compliance verdict in the weekly digest. Model `claude-opus-5`/`high`. Skills: `auditing-compliance`, `tracking-circulars`.
+
+### 15. Skill Engineer
+
+Decision rights: how to implement a requested skill, calculator or tool change; test design; when to ship. Model `claude-opus-5`/`high`. Works in a scratch clone; opens PRs with evals and tests; another agent (Validation Reviewer or a second Skill Engineer session) reviews; CI merges; the Principal is informed. Skills: `authoring-skills`, `building-calculators`, `writing-evals`, `releasing` (verification only; deploy is the release pipeline).
+
+## Meetings (multi-agent sessions with a chair)
+
+| Meeting | Chair | Members | Cadence | Decision |
+|---|---|---|---|---|
+| Desk meeting | Strategist | Desk team | Per charter (default daily pre-open, weekly review) | Watchlist, theses to pursue, playbook items |
+| Risk conference | Risk Office | Traders and Position Managers of affected desks, CIO optional | On risk notice or weekly | Guidance changes, pauses |
+| Investment committee | CIO | Risk Office, Coach, Desk Designer, Validation Reviewer, desk Strategists | Monthly + on proposals | Allocations, charters, promotions, retirements |
+| Coaching session | Coach | One desk's roles | Weekly | Playbook revisions, lesson adoptions |
+
+Meetings are capped in rounds by the chair's role definition (default 3) and produce minutes with each member's recorded position.
+
+## 16. Interaction matrix
+
+| Producer → Consumer | Artefact |
+|---|---|
+| Analyst → Strategist | Idea |
+| Strategist → Trader | Thesis |
+| Trader → Risk Office → Trader | Plan → RiskReview |
+| Trader → execution tools | OrderAction |
+| Execution service → Position Manager | Fill, subscribed events |
+| Position Manager → execution tools | PositionAction |
+| Execution service → Desk Reviewer | Closed dossier + counterfactuals |
+| Desk Reviewer → Coach | TradeReview, lesson proposals |
+| Coach → all roles | Playbook revisions, lesson decisions, evals |
+| Research Lab → Desk Designer → CIO | Evidence → Desk proposal → Charter |
+| CIO → firm | Allocation, charters |
+| Ops/Compliance → Principal | Incidents, audits |
+| Everyone → Principal | Journal, digest |

@@ -3,265 +3,217 @@
 | Field | Value |
 |---|---|
 | Spec id | `000-platform` |
-| Status | Draft v1.0 for Principal review |
+| Status | Draft v2.0 for Principal review (supersedes v1.0 of the same day) |
 | Date | 2026-09-20 |
-| Governed by | `.specify/memory/constitution.md` v1.0.0 |
-| Inputs | `docs/lessons-from-v1.md`, `docs/research/*` (4 reports) |
-| Companion documents | `plan.md`, `roles.md`, `memory.md`, `skills.md`, `execution.md`, `research.md`, `operations.md`, `tasks.md` |
+| Governed by | `.specify/memory/constitution.md` v2.0.0 |
+| Inputs | `docs/lessons-from-v1.md`, `docs/research/*` (4 reports), the Principal's direction of 2026-09-20: all decisions are agent-driven |
+| Companion documents | `plan.md`, `roles.md`, `memory.md`, `skills.md`, `tools-and-rails.md`, `learning.md`, `operations.md`, `tasks.md` |
 
-Requirement ids are `DH2-<AREA>-<nnn>`. Areas: ORG (organisation), TRD (trade lifecycle), MEM (memory), RSH (research), RSK (risk and policy), EXE (execution), DAT (data), OPS (operations), CMP (compliance), OBS (observability), COST (LLM cost), DEV (development). Requirements use EARS phrasing. `[NC]` marks an open clarification the Principal must resolve before the feature spec that cites it is finalised.
+Requirement ids are `DH2-<AREA>-<nnn>`. Areas: FIRM (organisation), DSK (desks and trades), MEM (memory), LRN (learning and research), RAIL (rails), TOOL (tools and execution service), DAT (data), OPS (operations), CMP (compliance), OBS (observability), COST (LLM cost), DEV (development). EARS phrasing. `[NC]` marks a clarification for the Principal.
 
 ---
 
 ## 1. Vision
 
-Dhanada v2 is an **autonomous trading organisation** for Indian markets, operated through Zerodha Kite, in which AI agents hold named roles (research, intelligence, trade management, risk, review, operations, compliance) and deterministic code performs everything that must be exact (execution, accounting, risk enforcement, simulation, data). Its product is a governed **portfolio of sleeves**: independently accounted strategies, each of which entered production through a pre-registered gate and each of which can be paused, demoted or retired by measured evidence.
+Dhanada v2 is an **AI-run investment firm** for Indian markets, trading through Zerodha Kite. Agents hold every role that decides: they form views, build theses, plan and size trades, manage positions, review each other, allocate capital among desks, research new strategies, coach one another, and run operations. Code provides instruments (calculators, data, backtests), executes repeatable actions (orders, accounting), keeps memory, and enforces the short list of rails the owner wrote in the Investment Policy Statement.
 
-The organisation learns. Every trade is a durable **dossier** that each role reads before acting and writes to after acting. Every research result is a **trial** in a ledger. Every lesson has a status (hypothesis, validated, retired) and only validated lessons influence trading. The loop from review to hypothesis to trial to gate to deployment is owned end to end.
+The firm is organised as **desks**. Each desk is a small team of agents with a mandate (horizon, universe, style), a capital allocation and its own playbook. Desks compete for capital under a **Chief Investment Officer** agent. A **Research Lab** proposes new desks and improvements; a **Coach** measures every agent's decisions and improves their playbooks; a **Risk Office** reviews plans and watches the book. Every trade is a **dossier** that each role writes into and reads from, so that every agent continues its own work on that trade across sessions, days and restarts.
 
 ## 2. Goals
 
 | # | Goal | Measure |
 |---|---|---|
-| G1 | Positive net expectancy after realised costs at the portfolio level | Portfolio Deflated Sharpe > 0 on paper across ≥ 3 sleeves before capital |
-| G2 | Breadth | ≥ 3 sleeves across ≥ 2 horizons before capital; ≥ 5 within 12 months of first capital |
-| G3 | A research loop that runs without the Principal | ≥ 4 pre-registered trials per week produced, reviewed and dispositioned by agents |
-| G4 | Survivable drawdowns | Automatic governance at pre-declared sleeve and desk thresholds; no override without written approval |
-| G5 | Operational autonomy | Only the daily broker login and capital/skill approvals require the Principal |
-| G6 | Honest measurement | Every Sharpe reported with DSR, N, k and MTRL; realised cost per R on every trade |
-| G7 | Bounded LLM spend | Daily budget per shift, enforced by the runtime, reported in the desk journal |
+| G1 | The firm makes money after realised costs | Firm-level net expectancy > 0 and Deflated Sharpe > 0 on paper across ≥ 3 desks before real capital; then live |
+| G2 | The firm is agentic end to end | No trading, allocation, promotion or exit decision is made by code; each is attributable to a role with reasoning |
+| G3 | The firm learns | Every closed trade reviewed; every agent's calibration tracked; playbooks revised with evidence; measurable improvement in decision scores quarter over quarter |
+| G4 | Breadth | ≥ 3 desks across ≥ 2 horizons on paper within 3 months; ≥ 5 within 12 months of first capital |
+| G5 | Operational autonomy | Only the daily broker login, the IPS and rail changes involve the Principal |
+| G6 | Honest measurement | Calibration, counterfactual baselines and trial counts on every performance claim |
+| G7 | Bounded LLM spend | Firm budget enforced by the runtime and allocated by the CIO among desks |
 
 ## 3. Non-goals (v2.0)
 
-- Options selling as a P&L engine (India VRP is net negative after frictions; constitution V.3).
-- Sub-15-minute holding periods or any strategy whose stop is inside one daily ATR (constitution III.3).
-- LLM-proposed price levels, quantities or thresholds (constitution I.1).
-- Multi-tenant SaaS, mobile apps, or a public API. One Principal, one broker account family.
-- Automated broker login (Zerodha terms forbid it; see `docs/research/2026-09-20-kite-sebi-execution-constraints.md`).
-- Kubernetes; the single-VM Docker Compose model from v1 ADR-005 is retained.
+- Multi-tenant SaaS, mobile apps, public API.
+- Automated broker login (Zerodha terms).
+- Kubernetes (single-VM Docker Compose retained).
+- Any decision rule hard-coded outside the IPS rails.
 
-## 4. Users
+## 4. The Investment Policy Statement (IPS) and rails
 
-| User | Interaction |
+The Principal writes `ips.yaml` (`[NC-1: initial values]`), the only place where the owner's limits live:
+
+| Field | Meaning |
 |---|---|
-| **Principal** (owner, one person) | Daily broker login; reads the daily desk journal and weekly digest; approves capital gates, constitution changes and trading-behaviour skill changes; can invoke any kill level. |
-| **Agents** (the roles in `roles.md`) | Operate the desk through skills and typed tools on schedules and events. |
-| **Developer agents** (Claude Code specialists) | Implement feature specs via PRs; never touch production directly. |
+| `total_capital_inr`, `paper_capital_inr` | Capital the firm may deploy; paper capital for desks in incubation |
+| `max_daily_loss_pct`, `max_drawdown_pct` | Firm-level rails; breach → firm flat-and-halt |
+| `max_single_name_pct`, `max_sector_pct` | Exposure rails |
+| `permitted_products`, `permitted_segments` | e.g. equity CNC/MIS, index futures; options defined-risk only |
+| `permitted_horizons` | e.g. intraday, swing, positional |
+| `prohibited` | e.g. naked option selling, automated login, sub-5-minute holds |
+| `max_desks_live`, `max_capital_per_desk_pct` | Concentration rails on the firm structure |
+| `llm_budget_usd_per_day` | Firm-wide spend rail |
 
-## 5. The organisation at a glance
+Rails (`tools-and-rails.md` §8) = IPS limits + regulator/broker mechanics + kill switch. Everything else is an agent decision.
+
+## 5. The firm
 
 ```
-                          ┌────────────────────────── Principal ──────────────────────────┐
-                          │  login · approvals · kill switch · weekly digest                │
-                          └───────────────────────────────┬────────────────────────────────┘
-                                                          │
-   AGENT PLANE (skills, memory, typed tools; NO broker write credentials)
-   ┌──────────────┐  ┌───────────────┐  ┌────────────────┐  ┌───────────────┐  ┌────────────────┐
-   │ Desk Head    │  │ Market Intel  │  │ Quant          │  │ Validation    │  │ Portfolio      │
-   │ (orchestrate)│  │ Analyst       │  │ Researcher     │  │ Reviewer      │  │ Manager        │
-   └──────┬───────┘  └───────┬───────┘  └───────┬────────┘  └──────┬────────┘  └──────┬─────────┘
-   ┌──────┴───────┐  ┌───────┴───────┐  ┌───────┴────────┐  ┌──────┴────────┐  ┌──────┴─────────┐
-   │ Trade        │  │ Risk Officer  │  │ Post-Trade     │  │ Operations    │  │ Compliance     │
-   │ Manager      │  │ (supervises)  │  │ Reviewer       │  │ Engineer      │  │ Auditor        │
-   └──────┬───────┘  └───────┬───────┘  └───────┬────────┘  └──────┬────────┘  └──────┬─────────┘
-          │  typed tools (MCP): candidates, dossiers, ledger, memory, health, pause_sleeve, …
-   ═══════╪══════════════════╪══════════════════╪═════════════════╪═════════════════╪═══════════
-   ENGINE (deterministic, tested, versioned; owns numbers and credentials)
-   data ingest · feature store · signal engines · policy gate · OMS/execution · accounting
-   simulation kernel · trial ledger + stats · governor · kill switch · dossier store · scheduler
-   ═══════╪════════════════════════════════════════════════════════════════════════════════════
-          │ Kite Connect (one static IP, one token)          PostgreSQL · Parquet/DuckDB
+                                   Principal (IPS, login, kill L3)
+                                                │
+   ┌────────────────────────────────────────────┴───────────────────────────────────────────┐
+   │ FIRM LEADERSHIP                                                                         │
+   │  CIO ── allocates capital and LLM budget among desks; charters / retires desks          │
+   │  Risk Office ── reviews plans, watches the book, pauses/halts within the IPS            │
+   │  Coach ── scores every agent's decisions, revises playbooks, runs evals                 │
+   └─────────────┬──────────────────────────────┬───────────────────────────┬───────────────┘
+                 │                              │                           │
+   ┌─────────────▼───────────┐   ┌──────────────▼──────────────┐   ┌────────▼──────────────┐
+   │ DESKS (N, chartered)    │   │ RESEARCH LAB                │   │ OPERATIONS            │
+   │  Analysts (tech,        │   │  Quant Researcher           │   │  Operations Engineer  │
+   │   catalyst, flow)       │   │  Data Steward               │   │  Compliance Auditor   │
+   │  Strategist             │   │  Validation Reviewer        │   │  Skill Engineer       │
+   │  Trader                 │   │  Desk Designer              │   │                       │
+   │  Position Manager       │   └─────────────────────────────┘   └───────────────────────┘
+   │  Desk Reviewer          │
+   └─────────────────────────┘
+   ═══════════════════════════ typed tools (MCP) ═══════════════════════════════════════════
+   EXECUTION SERVICE & INSTRUMENTS (code): orders · reconciliation · accounting · market data ·
+   calculators · backtest engine · trial ledger · dossier & memory stores · scheduler · rails
 ```
 
-The two planes are separated by a **hard boundary**: agents call the engine through typed tools whose implementations enforce policy; the engine never calls a language model on the trading path.
+## 6. The trade dossier state machine (agent-owned)
 
-## 6. Trade lifecycle (the dossier state machine)
+| State | Owner (decides the exit) | Meaning |
+|---|---|---|
+| `idea` | Analyst | A view with evidence, filed to the desk |
+| `thesis` | Strategist | Idea developed into a thesis: direction, horizon, catalyst, invalidation, conviction |
+| `plan` | Trader | Instrument, entry, stop, target, size, timing, order type, cost per R, expected R and probability (the Trader's forecast, for calibration) |
+| `risk_review` | Risk Office | Approve, modify (with the Trader's agreement), or reject with reasons |
+| `working` | Trader | Orders placed by the execution tool; fills tracked |
+| `open` | Position Manager | Position held; adjustments, scale, carry, exit are its decisions |
+| `closed` | Execution service (facts) → Desk Reviewer | Both legs reconciled; accounting written |
+| `reviewed` | Desk Reviewer + Coach | Per-role scores, lessons proposed |
+| `archived` | — | Immutable |
 
-| State | Owner | Entered when | Exits to |
-|---|---|---|---|
-| `candidate` | Engine (signal) | A sleeve's signal engine emits a candidate with entry zone, stop, target, horizon, sleeve risk budget | `vetted`, `vetoed`, `expired` |
-| `vetted` | Trade Manager | Categorical checks pass (event veto, data sanity, liquidity class, exposure overlap); thesis recorded | `intent` |
-| `vetoed` | Trade Manager | A categorical veto fires (reason enum recorded; A/B arm recorded) | terminal |
-| `intent` | Engine | Quantity, prices, product and bracket computed from the sleeve budget and the candidate; policy gate evaluated | `submitted`, `rejected_policy` |
-| `rejected_policy` | Engine | Policy gate denies (rule id recorded) | terminal |
-| `submitted` | Engine (OMS) | Order sent; tag persisted before the HTTP call | `open`, `cancelled`, `expired` |
-| `open` | Engine (OMS) / Trade Manager (narrative) | Fill confirmed by order-book reconciliation | `managing` |
-| `managing` | Engine (bracket) / Trade Manager (categorical events only) | Bracket active; carry decision at the gated rule's time | `closing` |
-| `closing` | Engine (OMS) | Exit order placed (stop, target, square-off, kill) | `closed` |
-| `closed` | Engine (accounting) | Both legs reconciled; costs, slippage, R computed | `reviewed` |
-| `reviewed` | Post-Trade Reviewer | Structured rubric written to the dossier; hypotheses queued | `archived` |
-| `archived` | Engine | Retention rules applied; dossier immutable | terminal |
-
-Only the owner of the current state may transition it, plus the Risk Officer's pause and the kill switch, which may force `closing` from any open state.
+Side exits: `dropped` (any owner, with reason), `rejected` (Risk Office), `expired`, `killed` (rail). Each role writes its own section of the dossier in its state and can be re-invoked on events while it owns the trade.
 
 ## 7. Requirements
 
-### 7.1 Organisation (ORG)
+### 7.1 Firm (FIRM)
 
-- **DH2-ORG-001** THE SYSTEM SHALL define each agent role as a versioned role definition (mandate, model, allowed tools, skills, memory scopes, forbidden actions, budget) checked into the repository under `agents/<role>/`.
-- **DH2-ORG-002** WHEN a role definition changes in a way that affects trading behaviour (tools, forbidden actions, decision skills), THE SYSTEM SHALL require the Principal's approval recorded in the PR before the change is deployable.
-- **DH2-ORG-003** THE SYSTEM SHALL run roles as isolated agent sessions with their own context, tool allowlist and budget; roles SHALL communicate only through the dossier store, the research ledger, memory, and typed engine tools, never through shared conversation history.
-- **DH2-ORG-004** THE SYSTEM SHALL provide a Desk Head orchestrator that starts every scheduled shift, records a shift run (start, end, cost, outcome) and escalates failures to the Principal channel.
-- **DH2-ORG-005** WHEN any role's structured output fails schema validation, THE SYSTEM SHALL record a `REVIEW` sentinel on the affected entity and continue fail-safe (no trade, no promotion), never a silent default.
-- **DH2-ORG-006** THE SYSTEM SHALL keep an append-only audit record of every agent invocation: role, role version, skill versions, model, prompt version, input references, output, cost, correlation ids.
-- **DH2-ORG-007** WHERE a decision requires debate (promotion review, monthly allocation), THE SYSTEM SHALL limit debate to at most two rounds and record each round's structured position.
+- **DH2-FIRM-001** THE SYSTEM SHALL define every role as a versioned role definition (`agents/<role>/ROLE.md`: mandate, decision rights, model, tools, skills, memory scopes, budget) and SHALL run each role as its own agent session with its own memory.
+- **DH2-FIRM-002** THE SYSTEM SHALL represent desks as chartered entities (`desks/<desk_id>/CHARTER.md` written by the CIO: mandate, universe, horizon, capital, LLM budget, team, playbook reference, review cadence) and SHALL allow the CIO to charter, resize, pause and retire desks through tools.
+- **DH2-FIRM-003** THE SYSTEM SHALL record every decision (trading or organisational) with role, role version, reasoning, instruments used, expected outcome, and correlation ids, so that any decision can be replayed and scored.
+- **DH2-FIRM-004** WHEN a role's structured output fails validation, THE SYSTEM SHALL return the validation errors to the same session for correction up to two times, then record `REVIEW` and notify the Coach; it SHALL NOT substitute a default decision.
+- **DH2-FIRM-005** THE SYSTEM SHALL let roles convene: a desk meeting, a risk conference and an investment committee are multi-agent sessions with an agenda, a chair, recorded positions and a decision, capped in rounds by the chair's role definition.
+- **DH2-FIRM-006** THE SYSTEM SHALL inform the Principal of every organisational decision (charter, allocation, promotion, retirement, playbook change) through the journal and digest, and SHALL require Principal approval only for IPS, rails and constitution changes.
 
-### 7.2 Trade lifecycle (TRD)
+### 7.2 Desks and trades (DSK)
 
-- **DH2-TRD-001** THE SYSTEM SHALL represent every trade as a dossier entity from `candidate` to `archived` with the state machine in §6, a single owner per state, and a complete transition log.
-- **DH2-TRD-002** THE SYSTEM SHALL generate candidates only from versioned signal engines of sleeves whose status is `active` or `reduced`; agents SHALL NOT create candidates.
-- **DH2-TRD-003** WHEN a candidate is created, THE SYSTEM SHALL compute entry zone, stop, target, horizon, product (MIS/CNC/NRML) and the sleeve risk budget in code and store them on the dossier before any agent sees it.
-- **DH2-TRD-004** WHEN the Trade Manager vets a candidate, THE SYSTEM SHALL accept only a structured verdict `{decision: take|veto, veto_reason: enum|null, thesis, invalidation_conditions: enum[], confidence_bucket}` and SHALL ignore any numeric field.
-- **DH2-TRD-005** THE SYSTEM SHALL run the Trade Manager's veto as an A/B arm: a deterministic fraction of candidates per sleeve is executed regardless of the veto (shadow), and the lift of the veto is reported weekly as expectancy difference with t-statistic. `[NC-1: shadow fraction; proposed 30 %]`
-- **DH2-TRD-006** WHEN an open position exists for a symbol, THE SYSTEM SHALL NOT create a second candidate for that symbol in any sleeve until the position is closed.
-- **DH2-TRD-007** THE SYSTEM SHALL define exits at entry (bracket) and SHALL change them only by rules that passed a gate; the Trade Manager MAY request `close_now` only for an enumerated invalidation condition that its role definition lists.
-- **DH2-TRD-008** WHEN a trade closes, THE SYSTEM SHALL compute gross P&L, statutory costs, slippage against reference prices on both legs, `risk_inr` and `r_multiple`, and SHALL mark the dossier `closed` only after both legs reconcile with the broker order book.
-- **DH2-TRD-009** THE SYSTEM SHALL expose a replay facility that reconstructs any dossier decision from stored inputs and reproduces the same engine outputs bit-for-bit.
+- **DH2-DSK-001** THE SYSTEM SHALL implement the dossier state machine in §6 with a single owning role per state, a complete transition log, and per-role sections.
+- **DH2-DSK-002** WHEN a Trader writes a plan, THE SYSTEM SHALL require it to reference the calculator outputs it used (volatility, structure, liquidity, cost, sizing) and to state expected R, probability of success and cost per R; the Trader's numbers are the plan.
+- **DH2-DSK-003** THE SYSTEM SHALL validate a plan only for type, rails (IPS, product, session, exposure, margin, freeze limits) and internal consistency (stop on the correct side, size within the desk's capital); any other objection is the Risk Office's decision.
+- **DH2-DSK-004** WHEN the Risk Office reviews a plan, THE SYSTEM SHALL accept `approve`, `modify` (proposed changes, requiring the Trader's acceptance or a chaired resolution) or `reject`, each with reasons, and SHALL record the review on the dossier.
+- **DH2-DSK-005** WHILE a dossier is `open`, THE SYSTEM SHALL route every relevant event (fill, price milestone the Position Manager subscribed to, catalyst on the symbol, data anomaly, risk notice, session milestone) to the Position Manager, whose decision (hold, adjust stop/target, scale, carry, exit) is executed by tools.
+- **DH2-DSK-006** THE SYSTEM SHALL let the Position Manager subscribe to price and time triggers so that it is invoked when they occur; between invocations the execution service holds the working stop and target orders the Position Manager last set.
+- **DH2-DSK-007** THE SYSTEM SHALL compute counterfactual baselines for every closed trade (no-trade, plan-as-filed with mechanical bracket, un-modified plan where the Risk Office modified it) and attach them to the dossier for the reviewers.
+- **DH2-DSK-008** THE SYSTEM SHALL allow a desk to define and revise its playbook (markdown plus skills) and SHALL version it; every dossier records the playbook version in force.
+- **DH2-DSK-009** THE SYSTEM SHALL provide a paper environment with identical tools where new desks incubate, and SHALL let the CIO move a desk between paper and live within the IPS.
 
 ### 7.3 Memory (MEM)
 
-- **DH2-MEM-001** THE SYSTEM SHALL provide per-trade, per-role memory: each dossier has one section per role that touched it; a role reads its own and others' sections before acting.
-- **DH2-MEM-002** THE SYSTEM SHALL enforce an outcome embargo: any retrieval of past dossiers or lessons for a decision at time T returns only facts whose `known_at ≤ T`.
-- **DH2-MEM-003** THE SYSTEM SHALL classify every lesson with a status in `{hypothesis, validated, retired}`; only `validated` lessons (those tied to a passed gate id) may be injected into a trading-path prompt.
-- **DH2-MEM-004** THE SYSTEM SHALL store lessons alongside verbatim evidence (the raw inputs and outputs they were derived from), never in place of it.
-- **DH2-MEM-005** THE SYSTEM SHALL keep reference memory (cost model, instrument rules, gates, regulatory facts) read-only to agents; changes go through PRs.
-- **DH2-MEM-006** THE SYSTEM SHALL run a nightly consolidation job that prunes or decays lessons past their validity window, and SHALL never delete evidence.
-- **DH2-MEM-007** THE SYSTEM SHALL version every memory write (who, when, prior hash) and support point-in-time reads.
+- **DH2-MEM-001** THE SYSTEM SHALL give every role its own long-term memory (playbook, lessons, calibration record, notes) and every dossier a section per role; roles read before deciding and write after.
+- **DH2-MEM-002** THE SYSTEM SHALL enforce time-aware retrieval: a decision at time T sees only items with `known_at ≤ T`.
+- **DH2-MEM-003** THE SYSTEM SHALL store lessons with evidence references and a status (`proposed`, `adopted`, `retired`) decided by the Coach, and SHALL include adopted lessons in the owning role's context.
+- **DH2-MEM-004** THE SYSTEM SHALL provide desk memory (shared by the desk team) and firm memory (shared by all), with write rights per role definition.
+- **DH2-MEM-005** THE SYSTEM SHALL version every memory write and support point-in-time reads and replay.
+- **DH2-MEM-006** THE SYSTEM SHALL run a nightly consolidation in which each role curates its own memory (index, decay, merges) with the Coach reviewing changes.
 
-### 7.4 Research (RSH)
+### 7.4 Learning and research (LRN)
 
-- **DH2-RSH-001** WHEN a backtest, replay or audit starts, THE SYSTEM SHALL first record a trial row containing hypothesis, universe, window, parameters, holdout flag, code SHA and the pre-registration id; a run without a trial row SHALL fail.
-- **DH2-RSH-002** THE SYSTEM SHALL report, beside every Sharpe or expectancy, the Deflated Sharpe at the experiment's trial count N, the aggregation depth k, the Probabilistic Sharpe, and the Minimum Track Record Length.
-- **DH2-RSH-003** THE SYSTEM SHALL require every pre-registration to be committed to the repository before the trial runs, and SHALL reject a trial whose parameters differ from its pre-registration without a new registration id.
-- **DH2-RSH-004** THE SYSTEM SHALL use point-in-time universes, delisting-inclusive price histories and per-instrument cost models in every backtest.
-- **DH2-RSH-005** THE SYSTEM SHALL provide a zero-alpha calibration: each research skill can rerun its pipeline on shuffled or synthetic zero-alpha data and report the distribution of best-of-N Sharpes for comparison.
-- **DH2-RSH-006** WHEN a sleeve promotion is proposed, THE SYSTEM SHALL route it to the Validation Reviewer, whose structured verdict (accept, request holdout, reject with reason enum) is required before the gate can be evaluated.
-- **DH2-RSH-007** THE SYSTEM SHALL maintain a hypothesis backlog fed by the Post-Trade Reviewer, the Market Intelligence Analyst and the Principal, with each item carrying source, date and disposition.
-- **DH2-RSH-008** WHERE an LLM is used to generate features (catalyst enums, regime labels), THE SYSTEM SHALL evaluate the feature against a no-feature baseline on the same trades before it is enabled in any sleeve.
+- **DH2-LRN-001** THE SYSTEM SHALL score every decision after the fact: calibration (stated probability vs outcome), process adherence to the role's playbook, and counterfactual comparison; scores are written to the deciding role's calibration record.
+- **DH2-LRN-002** THE SYSTEM SHALL provide the Coach with per-role, per-desk decision statistics with sample sizes and confidence intervals, and SHALL let the Coach revise playbooks, propose skill changes and adjust role prompts through versioned changes with evals.
+- **DH2-LRN-003** THE SYSTEM SHALL let the Research Lab run backtests, replays and factor studies through a sandboxed engine, recording each run in the trial ledger with its pre-registration and the trial count N; the ledger tool SHALL require an experiment id and hypothesis on every run.
+- **DH2-LRN-004** THE SYSTEM SHALL let the Desk Designer propose a desk charter and playbook to the CIO with evidence, and SHALL let the Validation Reviewer attach an adversarial review before the investment committee decides.
+- **DH2-LRN-005** THE SYSTEM SHALL let the Skill Engineer create and modify skills and calculators through PRs that run the skill's evals and the test suite; a second agent reviews; the Principal is informed.
+- **DH2-LRN-006** THE SYSTEM SHALL maintain point-in-time data, delisting-inclusive histories and masked identifiers for any LLM-touched historical study.
 
-### 7.5 Risk and policy (RSK)
+### 7.5 Rails (RAIL)
 
-- **DH2-RSK-001** THE SYSTEM SHALL evaluate every trade intent against a policy-as-code rule set before submission; each rule has an id, and denials record the rule id on the dossier.
-- **DH2-RSK-002** THE SYSTEM SHALL enforce, in code: single-stock exposure ≤ 15 % of desk equity, sector exposure ≤ 30 %, sleeve risk per trade ≤ the governor's current value, sleeve concurrency caps, desk daily loss cap, trading-hours window, blacklist, product rules, and margin availability. `[NC-2: initial desk daily loss cap; proposed 2 %]`
-- **DH2-RSK-003** THE SYSTEM SHALL run a sleeve governor after each accounting close that applies, in order: drawdown reduction/pause, volatility targeting, fractional Kelly cap, decay pause, clamp; and a desk governor that engages the soft kill at the desk drawdown limit.
-- **DH2-RSK-004** THE SYSTEM SHALL provide three kill levels (sleeve pause, desk flat-and-halt, gateway cancel-all-and-disconnect) invokable by the Principal, the Risk Officer (levels 1–2) and automatically by the governor (level 2), and SHALL drill all three on every release.
-- **DH2-RSK-005** THE SYSTEM SHALL compute realised cost per R per sleeve weekly and SHALL pause any sleeve whose gross expectancy over the trailing window is below twice its realised cost.
-- **DH2-RSK-006** THE SYSTEM SHALL size every position from the sleeve's allocated capital and risk fraction, never from account cash, and SHALL cap quantity by margin and freeze limits.
-- **DH2-RSK-007** THE SYSTEM SHALL NOT allow any agent tool to change a governor threshold, a policy rule, or a sleeve's allocated capital; these change only through PRs with Principal approval.
+- **DH2-RAIL-001** THE SYSTEM SHALL enforce, in code, only: IPS limits, regulator rules (order rate < 10 per second per segment, static IP, product/session rules, retention), broker mechanics, and the kill switch; the rail list is `rails/RAILS.md` and changes only by the Principal.
+- **DH2-RAIL-002** WHEN a rail blocks an action, THE SYSTEM SHALL record the event on the dossier or shift, notify the acting role and the Risk Office, and include it in the Coach's next review.
+- **DH2-RAIL-003** THE SYSTEM SHALL provide kill levels: L1 desk pause (Risk Office, CIO), L2 firm flat-and-halt (Risk Office, IPS breach), L3 gateway disconnect (Principal); all drilled on every release.
 
-### 7.6 Execution (EXE)
+### 7.6 Tools and execution service (TOOL)
 
-- **DH2-EXE-001** THE SYSTEM SHALL implement order placement, modification, cancellation, bracket management, square-off and reconciliation as deterministic code with no language-model call in the path.
-- **DH2-EXE-002** THE SYSTEM SHALL persist an order intent with a unique client tag before any broker HTTP call and SHALL treat a timeout or non-4xx failure as "unknown" until the order book has been polled by tag for at least two minutes.
-- **DH2-EXE-003** THE SYSTEM SHALL treat the broker order book as the source of truth and reconcile on every postback, on WebSocket reconnect, and every 60 seconds during market hours.
-- **DH2-EXE-004** THE SYSTEM SHALL enforce an order-action rate below 10 per second per exchange segment and below the broker's per-minute and per-day limits with a token bucket that counts placements, modifications, cancellations and rejections.
-- **DH2-EXE-005** THE SYSTEM SHALL egress order traffic only from the whitelisted static IP and SHALL halt order flow and alert when the observed egress IP differs.
-- **DH2-EXE-006** THE SYSTEM SHALL manage intraday (MIS) brackets with system-side stop and target orders and a local watchdog, and positional (CNC/NRML) brackets with two-leg GTT plus a daily verification.
-- **DH2-EXE-007** THE SYSTEM SHALL flatten all MIS positions by 15:15 IST with verification against broker positions, ahead of the broker's auto square-off.
-- **DH2-EXE-008** WHEN a `TokenException` or an authentication failure occurs, THE SYSTEM SHALL halt new entries, keep managing exits with cached state, and notify the Principal; it SHALL NOT attempt automated login.
-- **DH2-EXE-009** THE SYSTEM SHALL support paper and live environments with identical code paths, where paper fills come from the simulation kernel with honest limit semantics.
-- **DH2-EXE-010** THE SYSTEM SHALL record reference price, reference time, fill price, fill time and spread at decision time on every order.
+- **DH2-TOOL-001** THE SYSTEM SHALL execute orders (place, modify, cancel, brackets, square-off, reconciliation) as deterministic code behind typed tools, with tag-before-call persistence, unknown-state polling, order-book-as-truth reconciliation and an order-rate governor.
+- **DH2-TOOL-002** THE SYSTEM SHALL provide calculators as tools: volatility (ATR, realised vol), structure (swing levels, ranges, VWAP distance), liquidity (spread, depth, turnover class), cost (per product and date, cost per R for a given stop), sizing (risk-based quantity for a stated R), margin, correlation/exposure, and any calculator an agent commissions from the Skill Engineer.
+- **DH2-TOOL-003** THE SYSTEM SHALL provide a backtest and replay engine with first-touch fills, honest limits and realised-cost models, usable by agents on paper and research data and returning the same accounting schema as live.
+- **DH2-TOOL-004** THE SYSTEM SHALL record on every order the reference price and time, bid/ask at decision, fill price and time, and on every trade the costs, slippage, `risk_inr` and `r_multiple`.
+- **DH2-TOOL-005** THE SYSTEM SHALL keep broker credentials in the execution service's secret store; no tool returns them; agent sessions cannot reach broker endpoints directly.
+- **DH2-TOOL-006** WHEN authentication fails or the egress IP mismatches, THE SYSTEM SHALL halt new orders, keep protective orders working, notify the Principal and the Risk Office, and SHALL NOT attempt automated login.
 
 ### 7.7 Data (DAT)
 
-- **DH2-DAT-001** THE SYSTEM SHALL ingest Kite WebSocket ticks in `full` mode (5-level depth) for the active universe and persist bid/ask snapshots at decision times.
-- **DH2-DAT-002** THE SYSTEM SHALL maintain 1-minute, 15-minute and daily bars for the research universe (NIFTY-500 liquid names plus index futures), importing v1's existing bar history rather than re-downloading it.
-- **DH2-DAT-003** THE SYSTEM SHALL maintain a point-in-time universe table (constituents and liquidity rank as of each date) and a delisting table.
-- **DH2-DAT-004** THE SYSTEM SHALL refresh the instrument master daily before 08:45 IST and store lot sizes, freeze quantities, expiry calendars and holidays as data.
-- **DH2-DAT-005** THE SYSTEM SHALL ingest NSE corporate announcements, results calendar and corporate actions daily and expose them with `published_at` timestamps for embargo-safe use.
-- **DH2-DAT-006** THE SYSTEM SHALL test every agent-visible feature for degeneracy (constant, stale beyond tolerance, or structurally biased by time of day) in CI and at runtime; a degenerate feature SHALL be withheld from prompts and alerted.
-- **DH2-DAT-007** THE SYSTEM SHALL store research data as columnar files (Parquet) queried by DuckDB and transactional state in PostgreSQL.
+- **DH2-DAT-001** THE SYSTEM SHALL ingest Kite ticks in `full` mode with depth, build 1-minute, 15-minute and daily bars, and persist bid/ask at decision times.
+- **DH2-DAT-002** THE SYSTEM SHALL import v1's bar history, maintain daily bars for the research universe, a point-in-time universe table, delisting and corporate-action tables, and the instrument master with lot sizes, freeze quantities, expiries and holidays as dated data.
+- **DH2-DAT-003** THE SYSTEM SHALL ingest NSE announcements, results calendar and corporate actions with `published_at` and expose them to agents with that timestamp.
+- **DH2-DAT-004** THE SYSTEM SHALL test agent-visible features for degeneracy and SHALL tell the agent when a feature is withheld and why.
+- **DH2-DAT-005** THE SYSTEM SHALL store research data as Parquet queried by DuckDB and transactional data in PostgreSQL.
 
 ### 7.8 Operations (OPS)
 
-- **DH2-OPS-001** THE SYSTEM SHALL run the daily shift schedule in `operations.md` from a durable scheduler that records each shift run and resumes from the last completed step after a crash.
-- **DH2-OPS-002** THE SYSTEM SHALL deliver a daily desk journal and a weekly digest to the Principal containing: sleeve status, expectancy in R, cost per R, drawdown vs limit, DSR/MTRL progress, LLM spend, incidents, pending approvals.
-- **DH2-OPS-003** THE SYSTEM SHALL provide an Operations Engineer role with runbooks as skills for: morning checklist, token freshness, data-quality checks, feed stalls, reconciliation mismatches, deploy verification, and incident write-ups.
-- **DH2-OPS-004** WHEN a health check fails, THE SYSTEM SHALL execute the deterministic remediation in the runbook first and invoke the Operations Engineer only for diagnosis or when remediation fails.
-- **DH2-OPS-005** THE SYSTEM SHALL deploy only CI-built images tagged by release; no source, no hot-patching, and configuration only through the declared environment file.
+- **DH2-OPS-001** THE SYSTEM SHALL run a durable scheduler that triggers shifts and events, records runs, resumes after crashes, and lets desks set their own meeting and review cadence within firm hours.
+- **DH2-OPS-002** THE SYSTEM SHALL deliver a daily journal and weekly digest to the Principal: desks, decisions of note, decision-quality scores, expectancy and cost per R, drawdown vs IPS, LLM spend, incidents, organisational changes.
+- **DH2-OPS-003** THE SYSTEM SHALL provide an Operations Engineer with runbooks-as-skills, a Compliance Auditor with weekly audits, and deterministic health checks that remediate first and escalate second.
+- **DH2-OPS-004** THE SYSTEM SHALL deploy only CI-built images; no source on the VM; configuration only through the declared environment file.
 
 ### 7.9 Compliance (CMP)
 
-- **DH2-CMP-001** THE SYSTEM SHALL keep audit records (orders, fills, decisions, agent invocations, policy outcomes) for at least five years with tamper evidence (hash chain).
-- **DH2-CMP-002** THE SYSTEM SHALL encode market-hour, product, square-off, expiry and lot rules as versioned data with an effective-from date, updated by the Compliance Auditor via PR when circulars change.
-- **DH2-CMP-003** THE SYSTEM SHALL run a weekly compliance audit (OPS histogram, static IP, token handling, retention, rule versions) whose report is part of the weekly digest.
-- **DH2-CMP-004** THE SYSTEM SHALL log every trade decision with its reasoning references so that a regulator or the Principal can reconstruct why an order was placed.
+- **DH2-CMP-001** THE SYSTEM SHALL keep tamper-evident audit records (orders, fills, decisions, invocations, rail events) for at least five years.
+- **DH2-CMP-002** THE SYSTEM SHALL encode market rules as dated data maintained by the Compliance Auditor via PR.
+- **DH2-CMP-003** THE SYSTEM SHALL reconstruct, for any order, the chain of decisions and reasoning that produced it.
 
-### 7.10 Observability (OBS)
+### 7.10 Observability (OBS), cost (COST), development (DEV)
 
-- **DH2-OBS-001** THE SYSTEM SHALL emit traces for every shift, agent invocation, tool call and order with correlation ids linking dossier, trial and shift.
-- **DH2-OBS-002** THE SYSTEM SHALL expose metrics for: feed freshness, reconciliation lag, policy denials by rule, OPS usage, LLM cost by role, expectancy and cost per R by sleeve, governor actions.
-- **DH2-OBS-003** THE SYSTEM SHALL alert the Principal channel on: kill-switch engagement, token failure, feed stall > 5 minutes in market hours, reconciliation mismatch, budget exhaustion, and any policy denial of an exit order.
-
-### 7.11 LLM cost (COST)
-
-- **DH2-COST-001** THE SYSTEM SHALL enforce a per-shift budget and a daily desk budget on agent sessions via the runtime's budget controls, and SHALL stop the shift gracefully at the limit. `[NC-3: daily budget; proposed USD 25/day, research shift USD 10]`
-- **DH2-COST-002** THE SYSTEM SHALL route work to the cheapest adequate model tier per role as declared in the role definition, and SHALL cache stable prompt prefixes.
-- **DH2-COST-003** THE SYSTEM SHALL record cost per invocation and per dossier, and report cost per trade and cost per trial in the weekly digest.
-
-### 7.12 Development (DEV)
-
-- **DH2-DEV-001** THE SYSTEM SHALL be developed as feature specs under `specs/NNN-<feature>/` with `spec.md`, `plan.md`, `tasks.md` and contracts, each requirement traceable to tests.
-- **DH2-DEV-002** THE SYSTEM SHALL gate merges on: ruff, mypy --strict, unit tests with coverage floors (engine execution/accounting/policy ≥ 90 %, other new modules ≥ 85 %), integration tests on a real PostgreSQL, skill evals, and the kill-switch drill for release tags.
-- **DH2-DEV-003** THE SYSTEM SHALL keep acceptance scenarios in specs in Given/When/Then form and SHALL generate agent eval tasks from the scenarios that involve a role.
-- **DH2-DEV-004** THE SYSTEM SHALL enforce, with pre-tool-use hooks in the developer and runtime harnesses, that no agent session can read broker secrets, write to the production environment file, or call broker order endpoints.
+- **DH2-OBS-001** Traces for every shift, session, tool call and order with correlation ids; metrics for feed freshness, reconciliation lag, rail events, order-rate usage, LLM cost by role and desk, decision scores by role, expectancy and cost per R by desk.
+- **DH2-OBS-002** Alerts to the Principal on kill events, token failure, feed stall > 5 minutes, reconciliation mismatch, IPS proximity (80 % of any limit), budget exhaustion.
+- **DH2-COST-001** Per-session budgets, per-desk daily budgets allocated by the CIO within the IPS budget; graceful stop at limits; cost per decision and per trade reported weekly.
+- **DH2-COST-002** Model routing per role as declared in role definitions; stable prompt prefixes cached.
+- **DH2-DEV-001** Feature specs with requirement ids; CI (ruff, mypy --strict, unit ≥ 90 % for execution/accounting/rails, ≥ 85 % elsewhere, integration on PostgreSQL, skill evals, kill drill on releases).
+- **DH2-DEV-002** Pre-tool-use hooks in developer and runtime harnesses deny access to secrets, the production environment file and broker endpoints.
 
 ## 8. Acceptance scenarios (platform level)
 
-**S1 — A candidate becomes a paper trade with a full dossier.**
-Given sleeve `mom_core` is active with a risk budget, When its signal engine emits a candidate at 09:35 IST, Then a dossier exists in `candidate` with engine-computed levels; the Trade Manager is invoked with only categorical context; on `take`, the engine computes quantity and places a paper order with a persisted tag; on fill, the dossier is `open` with reference and fill prices; and every step has a transition log entry with correlation ids.
+**S1 — A desk takes a trade end to end, every decision by an agent.** Given the Positional Desk is chartered on paper, When the Technical Analyst files an idea at 09:40, Then the Strategist writes a thesis, the Trader writes a plan citing calculator outputs with expected R and probability, the Risk Office approves, the execution tool places the order with a persisted tag, the Position Manager's stop and target are working, and the dossier shows one owner per state with reasoning at each.
 
-**S2 — The veto is measured.**
-Given 30 % of candidates are shadow-executed regardless of veto, When the weekly review runs, Then the digest shows the veto arm's expectancy minus the shadow arm's with a t-statistic and sample sizes, and the Trade Manager's veto stays enabled only while the gate criteria hold.
+**S2 — The Position Manager decides the exit and is scored.** Given an open dossier, When the price crosses a milestone the Position Manager subscribed to, Then it is invoked, decides (hold/adjust/exit) with reasoning, the tool executes, and after close the dossier carries the mechanical-bracket counterfactual and the Position Manager's calibration record is updated.
 
-**S3 — A research result without a ledger row is impossible.**
-Given the Quant Researcher invokes the backtest skill without a pre-registration id, When the script runs, Then it exits non-zero before loading data and the shift log records the refusal.
+**S3 — The Risk Office modifies a plan.** Given a plan sized beyond the Risk Office's comfort but inside the IPS, When it returns `modify`, Then the Trader accepts or a chaired resolution occurs, both positions are recorded, and the eventual outcome is scored against both versions.
 
-**S4 — Outcome embargo.**
-Given a dossier closed on 2026-10-03 with a lesson written on 2026-10-04, When the Trade Manager recalls similar trades for a decision timestamped 2026-10-03 10:00, Then the lesson is not returned and the dossier is returned without its outcome fields.
+**S4 — A rail fires and is explained.** Given a plan that would breach `max_single_name_pct`, When the Trader submits it, Then the tool rejects with the rail id, the dossier records it, the Risk Office is notified, and the Coach's next review includes it.
 
-**S5 — Governor pauses a sleeve.**
-Given sleeve `sip_orb` has a drawdown of 6.2 % against a pause threshold of 6 %, When the accounting close runs, Then the sleeve status is `paused`, the reason is `dd_pause`, a Principal alert is sent, existing positions keep their brackets, and no new candidates are generated for that sleeve.
+**S5 — Time-aware memory.** Given a lesson learned on D+1 from a trade closed on D, When any role decides at D 10:00 in replay, Then the lesson is absent.
 
-**S6 — Broker timeout does not duplicate.**
-Given an order placement HTTP call times out, When the OMS handles it, Then no retry is sent until the order book has been polled by tag for two minutes, and the dossier shows `submitted` with `ack_state=unknown` during that window.
+**S6 — The CIO reallocates.** Given the monthly investment committee, When desk statistics are presented with sample sizes, Then the CIO's allocation decision with reasoning is recorded, applied by tool within the IPS, and reported to the Principal.
 
-**S7 — Kill drill on release.**
-Given a release tag is pushed, When CI runs, Then it executes the three-level kill drill against a paper environment and blocks the release on any failure.
+**S7 — The Coach improves a playbook.** Given a Trader whose stated probabilities are systematically overconfident over ≥ 50 trades, When the Coach runs its weekly review, Then it revises the Trader's playbook (versioned), adds an eval case, and the next sessions load the new version.
 
-**S8 — Agent cannot touch money.**
-Given any agent session, When it attempts a Bash command or tool call matching broker order endpoints, the production environment file, or secrets paths, Then the pre-tool-use hook denies it, the denial is logged with the role and shift, and the shift continues.
+**S8 — The Skill Engineer ships a calculator.** Given a Trader requests a new liquidity-impact calculator, When the Skill Engineer opens a PR with tests and evals and the Validation Reviewer approves, Then CI merges it and the Trader's next session can call it; the Principal sees it in the digest.
 
-**S9 — The Principal's only daily job.**
-Given a trading day, When the Operations Engineer's morning checklist finds no valid token at 08:30 IST, Then the Principal receives one reminder with the login link, the desk stays in `awaiting_login`, and after login the checklist completes without further human action.
+**S9 — Broker timeout does not duplicate.** As in every version: tag persisted before the call; unknown state polled for two minutes; no duplicate.
 
-**S10 — Promotion is adversarial.**
-Given the Quant Researcher proposes promoting a sleeve from harness to paper, When the Validation Reviewer runs, Then its structured verdict lists leakage, survivorship, cost and multiple-testing checks with pass/fail each, and a `request_holdout` verdict creates a new pre-registration with an untouched window before any gate evaluation.
+**S10 — The Principal's only daily job.** Login reminder once; desk `awaiting_login`; arms automatically afterwards.
 
-## 9. Gate register (adopted from v1 EDGE spec, amended)
-
-| Gate | Decides | Criteria (summary; normative detail in `research.md`) |
-|---|---|---|
-| G0 | hypothesis → pre-registered trial | Backlog item has source, falsifiable statement, universe, window, cost model, kill criteria |
-| G1 | harness → paper (positional sleeve) | Survivorship-free net alpha > 0 in ≥ 4 of 5 years; DSR > 0.5 at ledger N; drawdown accepted in writing |
-| G2 | harness → paper (intraday/swing sleeve) | Net expR > 0 in every holdout window; pooled t > 2.5; n ≥ 300; cost_R ≤ 0.10; filtered beats unfiltered where a filter is the thesis |
-| G3 | paper → keep | ≥ 100 trades (or ≥ 6 rebalances) across ≥ 2 regimes; net expR > 0, t > 1; median cost_R ≤ 0.5 × gross expR; bracket exits ≥ 95 % |
-| G4 | enable an LLM feature | with-arm minus without-arm > 0.03R, t > 2 on the difference, ≥ 300 trades each |
-| G5 | any sleeve → real capital | All of: G3 held; sleeve DSR > 0.5; governor never bypassed; kill drill passed on current release; ≥ 3 sleeves at G3 across ≥ 2 horizons; portfolio DSR > 0; Principal signature; initial allocation ≤ min(₹100,000, 10 % of paper capital) |
-| G6 | keep a validated lesson | Lesson's implied rule improves expectancy on a pre-registered holdout; otherwise `retired` |
-
-## 10. Glossary
+## 9. Glossary
 
 | Term | Meaning |
 |---|---|
-| Sleeve | A named, independently accounted strategy with its own status, capital, risk fraction and gates |
-| Dossier | The durable per-trade entity with state, engine data, per-role memory sections and evidence |
-| Candidate | An engine-generated trade opportunity with computed levels, before vetting |
-| Intent | A sized, priced, policy-checked order request |
-| R | Rupees at risk at entry: `qty × |entry_reference − stop|`; R-multiple = net P&L / R |
-| cost_R | Realised (statutory + slippage) cost per trade divided by R |
-| DSR / PSR / MTRL | Deflated Sharpe, Probabilistic Sharpe, Minimum Track Record Length (Bailey & López de Prado) |
-| N, k | Trial count under an experiment; number of winners blended into a reported result |
-| Outcome embargo | Retrieval rule: only facts known at the decision time are visible |
-| Shift | A scheduled unit of agent work with a budget and a run record |
-| Principal | The human owner |
+| IPS | Investment Policy Statement: the Principal's limits and permissions |
+| Rail | A limit enforced by code from the IPS, regulation or broker mechanics |
+| Desk | A chartered team of agents with mandate, capital and playbook |
+| Dossier | The durable per-trade entity with state, per-role sections and evidence |
+| Playbook | A desk's or role's written procedure, versioned, revised by agents |
+| Calibration record | Per-role history of stated expectations vs outcomes |
+| Counterfactual baseline | Code-computed alternative outcome for a trade (no-trade, mechanical bracket, unmodified plan) |
+| R, cost_R, DSR, MTRL, N, k | As in `learning.md` |

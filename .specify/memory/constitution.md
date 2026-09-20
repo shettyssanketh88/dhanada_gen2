@@ -1,78 +1,75 @@
 # Dhanada v2 Constitution
 
-*Version 1.0.0 — ratified 2026-09-20. This document is the highest authority in the repository. Every spec, plan, task, skill, agent definition and pull request is checked against it. Amending it requires a version bump, a dated rationale in §9, and the Principal's written approval.*
+*Version 2.0.0 — 2026-09-20. Supersedes 1.0.0 (same day) after the Principal's direction: "all decisions are agent-driven, not static code". This document is the highest authority in the repository. Amending it requires a version bump, a dated rationale in §10, and the Principal's written approval.*
 
 ## Preamble
 
-Dhanada v2 is an autonomous trading organisation, not a trading program. Its product is a governed portfolio of small, real, measured edges in Indian markets, run by AI agents in named roles who research, decide, review and operate, and by deterministic code that executes, accounts, simulates and enforces. The organisation exists to be net positive after realised costs in roughly 95 % of years, with drawdowns it has pre-declared it can survive. It does not exist to win a high percentage of trades, to trade every day, or to demonstrate that language models can predict prices.
+Dhanada v2 is an autonomous investment firm run by AI agents. The agents are the firm: they analyse, decide, trade, manage risk, research, learn, and operate. Code exists to serve them: it executes repeatable actions (orders, data, accounting, calculations, backtests), it remembers, and it holds a short list of rails the owner has set. Nothing in code decides what to trade, when, at what levels, in what size, or when to exit. Those are decisions, and decisions belong to agents who remember, reflect and improve.
 
-## Article I — Agents decide categories, code decides numbers
+The firm exists to compound the Principal's capital within the Principal's Investment Policy Statement. It does not exist to prove a framework, to trade every day, or to hide losses in a tail.
 
-1. No language model output may be used as a price, stop, target, quantity, weight, threshold, or any other number that affects an order or a risk limit. Numbers are computed by versioned, unit-tested code from declared inputs.
-2. Language models produce: hypotheses, classifications (enums), rankings among pre-computed options, explanations, reviews, plans, and code. Every such output is a typed structured object validated by schema before use.
-3. Prompts that feed a decision contain no anchoring numbers. Where a number is needed for context, it is expressed in relative, categorical, or z-scored form produced by code.
-4. Any agent feature that touches trading is deployed only as an A/B arm against the mechanical baseline, and stays only if its measured lift passes a pre-registered gate.
+## Article I — Decisions are made by agents
 
-## Article II — Nothing trades without a pre-registered gate
+1. Every trading decision (idea, thesis, instrument, direction, entry, stop, target, size, timing, order type, adjustment, carry, exit) is made by a named agent role, recorded with its reasoning, and owned by that role until it hands over.
+2. Every organisational decision (which desks exist, how capital is allocated among them, which strategies are promoted or retired, which lessons are believed, when to pause) is made by a named agent role.
+3. Code may compute, propose, simulate, and warn. Code may not decide. A calculator returns a number; the agent decides whether to use it.
+4. Agents must reason with instruments, not guesses: levels come from calculators the agent invokes (volatility, structure, liquidity, cost), and the agent records which instruments it used and why it chose as it did.
 
-1. Every strategy, parameter change, feature, or allocation rule enters production through a gate whose criteria were written before the data were seen. Gates have ids, owners, minimum sample sizes, holdout windows and kill criteria.
-2. Every backtest, replay, or audit is a row in the trial ledger before its result is known. Deflated Sharpe with the ledger's trial count, and the Minimum Track Record Length, are reported beside every Sharpe or expectancy.
-3. A result without a ledger row is not evidence. A result on data used to choose its parameters is not evidence. Win rate is never a promotion metric.
-4. Nobody, human or agent, changes a trading parameter in response to fewer trades than the sleeve's declared MTRL. Daily P&L is an operational signal, never a research signal.
+## Article II — The rails are few, explicit, and the owner's
 
-## Article III — The cost equation governs every strategy
+1. The Principal writes the **Investment Policy Statement (IPS)**: total capital, maximum daily and total loss, maximum single-name and sector exposure, permitted products and horizons, prohibited activities. Agents decide everything inside it.
+2. Code enforces only: the IPS limits, the regulator's rules (order rate, static IP, product and session rules, audit retention), broker mechanics, and the kill switch. These are rails, not decisions. The rail list lives in one file and grows only by the Principal's hand.
+3. A rail that fires is an event the agents must explain and learn from, never a silent correction.
 
-1. Every strategy carries its cost equation: `cost_R = round-trip cost % of notional ÷ stop distance % of price`, computed from realised fills, not assumptions.
-2. A strategy is eligible for capital only if its gross expectancy after holdout is at least twice its realised `cost_R`.
-3. Sub-15-minute holding periods and stops inside one daily ATR are presumptively cost-dominated and require the Principal's written exception to be researched at all.
-4. Slippage is measured (bid/ask captured, arrival vs fill logged on every order) and recalibrated weekly. An unmeasured cost is assumed to be worse than modelled.
+## Article III — Every agent remembers, reflects and improves
 
-## Article IV — One trade, one owner, one state machine
+1. Each agent role has its own long-term memory (playbook, lessons, calibration record) and writes its own section in every trade it touches. Memory persists across invocations, restarts and deploys.
+2. Every trade is reviewed after it closes, by the roles that made its decisions and by an independent reviewer. Lessons are proposed by the roles, judged by the Coach, and carry evidence.
+3. Agents may change their own playbooks and skills. Changes to skills go through review by another agent and the repository's tests before they take effect; the Principal is informed, not asked, unless the change touches the rails.
+4. Retrieval of the past respects time: an agent deciding at time T sees only what was known at T.
 
-1. A trade is a single durable entity (the *dossier*) from idea to archive. It has exactly one owning role at every state, and only that role's actions, plus the Risk Officer's veto and the kill switch, may change it.
-2. Every role that touches a trade writes to that trade's dossier in its own section, and reads the dossier before acting. Memory is per trade per role, and it persists across agent invocations, restarts and deploys.
-3. Exits are defined at entry (bracket) and changed only by rules that passed a gate. Discretionary exit management by an agent is forbidden unless the gate that admits it names the categorical conditions it may act on.
+## Article IV — Honesty is measured, not assumed
 
-## Article V — Breadth before signal quality
+1. Every decision is scored after the fact against what the agent said it expected (calibration) and against counterfactual baselines the firm computes (no-trade, mechanical exit, un-vetoed). Scores go back to the agent that decided.
+2. Every research result is a trial in a ledger with its pre-registration; every reported performance figure carries the number of trials it was selected from. Win rate is never a headline.
+3. Agents report outcomes faithfully. A failed test is reported with output. "The image built" is not "CI passed". An agent that cannot verify a claim says so.
 
-1. The desk is a portfolio of independently accounted sleeves. Real capital requires at least three sleeves with positive net paper expectancy across at least two horizons, a measured correlation matrix, and a portfolio-level Deflated Sharpe above zero.
-2. Sizing is in R from a fractional-Kelly risk budget per sleeve under portfolio volatility targeting. Drawdown governance is automatic and pre-declared per sleeve and per desk; overrides require the Principal in writing and are logged.
-3. No naked short-tail exposure. Any option position is defined-risk and sized so that a three-sigma day costs at most one R.
+## Article V — Breadth, cost and survival
 
-## Article VI — Deterministic where it must be, agentic where it may be
+1. The firm runs several desks with different mandates and horizons so that no single edge is the firm. The Chief Investment Officer decides how many and which.
+2. Every desk knows its cost per unit of risk from realised fills and must justify its edge against it in its own reviews.
+3. Drawdown discipline is the Risk Office's decision within the IPS; the IPS maximum loss is the rail.
 
-1. Execution (order placement, modification, cancellation, bracket management, reconciliation), accounting (positions, cash, costs, P&L, R), risk policy enforcement, simulation, and market-data ingestion are static, versioned, tested code. They expose typed tools. They never call a language model.
-2. Research, analysis, classification of text, planning, review, allocation within bounds, operations diagnosis, and documentation are performed by agents through skills. Skills bundle instructions with the deterministic scripts they rely on.
-3. An agent may propose a change to code or to a skill. The change becomes effective only through the repository's pull-request, CI, gate and release process. Agents do not hot-patch running systems.
+## Article VI — Deterministic where it must be
+
+1. Order placement, modification, cancellation, tracking and reconciliation; market-data ingestion; accounting; calculators; the backtest engine; audit; and the rails are versioned, tested code. They expose typed tools. They never call a language model.
+2. Agents act on the world only through these tools. Tool inputs are validated for type and against the rails; nothing else.
 
 ## Article VII — Evidence, provenance and replay
 
-1. Every agent invocation that influences a trade or a promotion records its inputs (versioned), prompt version, model, outputs, cost, and the dossier or trial it belongs to. Any decision can be replayed from stored inputs.
-2. Every feature an agent sees has a distribution test; a degenerate feature (constant, stale, or structurally biased) fails the build.
-3. Research and paper trading share one simulation kernel with first-touch fills and conservative tie-breaking. Paper fills are honest: non-marketable limits do not fill.
+1. Every agent invocation records inputs (by reference), prompt and skill versions, model, outputs, cost and correlation ids. Any decision can be replayed from stored inputs.
+2. Research, replay and paper trading share one execution engine and one accounting path.
 
 ## Article VIII — Safety, compliance and the Principal
 
-1. Three kill levels exist and are drilled every release: sleeve pause, desk flat-and-halt, gateway cancel-all-and-disconnect. A failed drill blocks the release.
-2. SEBI's framework for individual algorithmic trading is a design constraint: static IP, OAuth with 2FA, a hard order-rate governor below the exchange threshold, five-year audit retention, algo identification readiness, and market-hour and product rules encoded as policy.
-3. The Principal (the human owner) alone may: approve a capital gate, change this constitution, approve a skill or agent change that alters trading behaviour, and provide broker credentials. The daily broker login is a Principal action until the broker permits otherwise.
-4. Agents never hold broker credentials in their context. Credentials live in the execution layer's secret store.
+1. Three kill levels exist and are drilled every release: desk pause, firm flat-and-halt, gateway disconnect.
+2. The Principal alone may: write the IPS, amend this constitution, add rails, provide broker credentials, and press kill level three. The daily broker login is the Principal's until the broker permits otherwise.
+3. Agents never hold broker credentials in context.
 
-## Article IX — Simplicity, surgical change, honesty
+## Article IX — Simplicity and surgical change
 
-1. Build the minimum that satisfies the spec; no speculative abstraction, no configurability that no gate asked for.
-2. Change only what the task requires; do not refactor adjacent code.
-3. Report outcomes faithfully. A failed test is reported with its output. A skipped gate is reported as skipped. "The image built" is not "CI passed". An agent that cannot verify a claim says so.
+1. Build the minimum that satisfies the spec. No configurability no agent asked for.
+2. Change only what the task requires.
 
 ## Article X — Development discipline (Spec-Driven Development)
 
-1. Specifications precede code. Each feature has a `spec.md` (what and why, with EARS-style requirements and acceptance scenarios), a `plan.md` (how, with contracts and data model), and `tasks.md` (ordered, verifiable steps). Code that has no spec is not merged.
-2. Requirements carry stable ids (`DH2-<AREA>-<nnn>`); tests and PRs cite them.
-3. CI is the only verifier. Source never lives on the production VM; the VM runs released images only. The Git object database never lives on a cloud-synced filesystem.
-4. Python 3.12+, type hints and docstrings everywhere, `ruff` and `mypy --strict` clean, unit coverage ≥ 85 % for new modules and ≥ 90 % for execution, accounting and risk-policy code.
+1. Specifications precede code. Feature specs carry requirement ids (`DH2-<AREA>-<nnn>`) with acceptance scenarios; tests and PRs cite them.
+2. CI is the only verifier. Source never lives on the production VM. The Git object database never lives on a cloud-synced filesystem.
+3. Python 3.12+, typed, documented, `ruff` and `mypy --strict` clean; execution, accounting and rails ≥ 90 % unit coverage.
 
-## §9 Amendment log
+## §10 Amendment log
 
 | Version | Date | Change | Approved by |
 |---|---|---|---|
-| 1.0.0 | 2026-09-20 | Initial ratification from v1 lessons (docs/lessons-from-v1.md) and the 2026-09-07 research report. | pending Principal |
+| 1.0.0 | 2026-09-20 | Initial draft ("agents decide categories, code decides numbers"). | superseded |
+| 2.0.0 | 2026-09-20 | Rewritten on the Principal's direction: all decisions agentic; code = tools, memory and owner-set rails; agents self-improve; Principal informed rather than asked except for rails and constitution. | pending Principal |

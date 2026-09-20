@@ -1,184 +1,138 @@
 # Memory architecture
 
-*Companion to `spec.md` (DH2-MEM-*). Implements constitution Article IV.2 (per-trade, per-role memory) and Article VII (evidence and replay). Evidence base: CoALA taxonomy; TradingAgents/FinMem/FinAgent/FinCon memory designs and their failures; the "Outcome Embargo" and "hierarchy of truth" proposals in arXiv 2605.19337; verbatim-over-extracted result (arXiv 2601.00821); Managed Agents memory-store warning on read-write poisoning.*
+*Companion to `spec.md` v2.0 (DH2-MEM-*). Every role remembers; every trade is a dossier every role writes into; the Coach curates what the firm believes. Evidence base: CoALA taxonomy; FinMem layered memory; FinAgent low/high-level reflection; FinCon belief propagation; TradingAgents per-role reflection and its embargo bug; verbatim-over-extracted result (arXiv 2601.00821); Anthropic memory tool and auto-memory conventions.*
 
 ## 1. Principles
 
-1. **Memory is per entity and per role.** A trade has a dossier; each role has its own section in it. A role also has its own long-term memory. There is no single shared blob.
-2. **Evidence first, lessons second.** Every lesson links to the verbatim inputs and outputs it came from. Retrieval returns evidence and lesson together; a lesson without evidence is invalid.
-3. **Outcome embargo.** Every memory item carries `known_at`. Retrieval for a decision at time T filters to `known_at ≤ T`. Outcomes (P&L, R, exit reason) are `known_at = closed_at`, never earlier.
-4. **Lessons have a status.** `hypothesis` → `validated` (tied to a passed gate id) → `retired` (failed G6, expired, or superseded). Only `validated` lessons enter a trading-path prompt.
-5. **Hierarchy of truth.** The engine's ledger (positions, fills, costs) is authoritative over anything in an agent's memory or context. Agents may not "remember" a position; they read it.
-6. **Reference is read-only.** Desk knowledge is changed only through PRs. Agent scratch memory is read-write but never auto-promoted.
-7. **Versioned and replayable.** Every write records actor, time, prior hash. Point-in-time reads are supported.
-8. **Decay and pruning are governed.** Lessons expire on a validity window unless re-validated; evidence is never deleted, only archived.
+1. **Per role, per entity.** A role's memory is its own. A trade's memory (dossier) has a section per role. Desk and firm memories are shared with explicit write rights.
+2. **Time-aware.** Every item carries `known_at`; a decision at T retrieves only `known_at ≤ T` (replay-safe).
+3. **Evidence with every lesson.** Lessons link to the verbatim dossiers, trials and scores they came from; retrieval returns both.
+4. **Agents curate their own memory; the Coach decides what the firm adopts.** Lesson status (`proposed | adopted | retired`) is the Coach's decision, with the Validation Reviewer for trading-impact lessons.
+5. **Ledger over memory.** Positions, fills, cash and costs are read from the execution service, never remembered.
+6. **Versioned.** Every write records actor, time, prior hash; point-in-time reads exist.
 
-## 2. Memory scopes (CoALA mapping)
+## 2. Scopes (CoALA mapping)
 
-| Scope | CoALA type | Owner | Read by | Write by | Storage |
+| Scope | Type | Owner | Readers | Writers | Storage |
 |---|---|---|---|---|---|
-| **Working memory** | working | the running session | itself | itself | session context; recited plan file per shift |
-| **Trade dossier** | episodic (per entity) | Engine (state) + roles (sections) | Trade Manager, Risk Officer, Post-Trade Reviewer, Desk Head, Quant Researcher (embargo-safe) | Engine (engine section, transitions), each role (own section only) | PostgreSQL (`dossiers`, `dossier_sections`, `dossier_events`) + filesystem projection for agent file tools |
-| **Role memory** | semantic + procedural (per role) | each role | that role; Validation Reviewer (audit) | that role (proposals), Validation Reviewer (status changes), consolidation job | Git-backed markdown under `memory/roles/<role>/` with `MEMORY.md` index + topic files; mirrored to PostgreSQL for search |
-| **Desk knowledge** | semantic (shared) | Principal via PRs | all roles | PR only | `memory/desk/` markdown + rule data tables |
-| **Research memory** | episodic + semantic | Quant Researcher | Researcher, Reviewer, PM | Researcher (experiments), Reviewer (verdicts) | Trial ledger (PostgreSQL) + `research/experiments/<id>/` files in git |
-| **Ops memory** | episodic + procedural | Operations Engineer | Ops, Desk Head, Compliance | Ops | `memory/ops/` incidents + runbooks-as-skills |
-| **Desk journal** | episodic (desk-level) | Desk Head | Principal, all roles | Desk Head | `journal/YYYY-MM-DD.md` + structured summary row |
+| Working memory | working | the session | itself | itself | context + recited plan file |
+| Trade dossier | episodic per entity | Execution service (facts) + owning roles | desk team, Risk Office, Coach, Reviewers, Research Lab (time-aware) | execution service (facts), each role (own section) | PostgreSQL + file projection |
+| Role memory | semantic + procedural | the role | the role, Coach, Validation Reviewer | the role; Coach (lesson status, playbook revisions) | git-backed markdown `memory/roles/<role>/` + PostgreSQL mirror |
+| Desk memory | semantic + episodic | the desk | desk team, CIO, Coach | desk roles per charter; Strategist curates | `memory/desks/<desk_id>/` |
+| Firm memory | semantic | CIO | all | CIO, Risk Office (risk section), Coach (lessons index), Compliance (rules pointers) | `memory/firm/` |
+| Research memory | episodic + semantic | Research Lab | Lab, CIO, Coach | Researcher, Reviewer, Data Steward | trial ledger + `research/experiments/` |
+| Ops memory | episodic + procedural | Operations | Ops, Compliance, Coach | Ops | `memory/ops/` |
+| Journal | episodic firm-level | Desk Head function (CIO's shift) | Principal, all | CIO shift | `journal/` |
 
-Role memory is where a role "continues work" across invocations. Dossier sections are where a role continues work on a specific trade across invocations, restarts and deploys (constitution IV.2).
-
-## 3. The trade dossier
-
-### 3.1 Structure
+## 3. Trade dossier
 
 ```
-dossier/<dossier_id>/
-  dossier.json            # engine-owned: state, sleeve, symbol, levels, qty, product, timestamps, refs
-  transitions.jsonl       # engine-owned: every state change {from, to, actor, at, reason, correlation_id}
-  engine/
-    candidate.json        # signal engine output + feature snapshot ids at creation
-    intent.json           # sizing, prices, policy decision (rule ids), margin check
-    orders.jsonl          # order/fill events with reference prices, spreads, ack states
-    accounting.json       # gross, costs, slippage, risk_inr, r_multiple (known_at = closed_at)
+dossier/<id>/
+  dossier.json          # facts: state, desk, symbol, product, qty, fills, costs, R, timestamps, playbook_version, hash chain
+  transitions.jsonl     # {from, to, actor_role, at, reason, invocation_id}
+  facts/
+    orders.jsonl        # order intents, acks, fills, reference prices, spreads
+    accounting.json     # known_at = closed_at
+    counterfactuals.json# no_trade, mechanical_bracket, unmodified_plan (written at close)
   sections/
-    trade_manager.md      # thesis, invalidation conditions, hold notes, each entry timestamped
-    risk_officer.md       # any findings touching this trade
-    market_intel.md       # brief + catalyst tags relevant at vet time (copied, embargo-safe)
-    post_trade_review.md  # rubric + reflection (known_at = review time)
-  evidence/
-    <invocation_id>.json  # prompt version, model, inputs refs, structured output, cost
+    analyst_<name>.md   # idea + evidence
+    strategist.md       # thesis, invalidation, conviction
+    trader.md           # plan, instruments used, expected R / p, order working notes
+    risk_office.md      # review, modifications, notices
+    position_manager.md # every action with reasoning; subscriptions
+    desk_reviewer.md    # rubric, findings, lesson proposals
+    coach.md            # scores, coaching notes
+  evidence/<invocation_id>.json  # prompt/skill versions, model, input refs, output, cost
 ```
 
-The filesystem projection is generated from PostgreSQL for agent file tools (read) and parsed back (write to own section only, enforced by the tool). The database is the source of truth.
+- A role writes only its own section (append-only blocks), through `dossiers:write_section`.
+- `facts/` is written by the execution service; agents cannot write it.
+- Every section block carries `known_at`; the decision it records is scored later against `facts/` and `counterfactuals.json`.
 
-### 3.2 Section write rules
+### Continuing work on a trade
 
-- A role writes only to `sections/<own_role>.md` through `dossiers:write_section`, which appends a timestamped block; it cannot edit or delete prior blocks.
-- The engine writes `dossier.json`, `transitions.jsonl`, `engine/*`.
-- `evidence/` is written by the runtime for every invocation that reads the dossier.
-- After `archived`, the dossier is immutable.
-
-### 3.3 Retrieval for a role ("recall similar trades")
-
-`memory:recall_similar_trades(symbol, sleeve_id, setup_tags[], as_of, k)`:
-
-1. Candidate set: dossiers with the same sleeve, or same symbol, or overlapping setup tags, with `created_at < as_of`.
-2. Embargo: strip any field with `known_at > as_of` (outcomes, reviews written after `as_of`).
-3. Rank: BM25 on the concatenated sections plus a recency decay with a per-sleeve half-life (default 90 days) — the age decay exists because old lessons anchor across regimes.
-4. Return at most `k` (default 5) dossiers as structured summaries ≤ 300 tokens each, with links to full sections.
-5. Log the retrieval (ids returned, embargo applied) in the invocation evidence.
-
-No embeddings in v2.0; PostgreSQL full-text search is sufficient at this scale and is deterministic. pgvector is an optional later ADR.
+When a role is re-invoked for a dossier (new event, next day, after a restart), the launcher assembles: the role's playbook, its calibration summary, adopted lessons in scope, the dossier facts as of now, and **all sections** (own and others') up to now. The role therefore resumes with its own prior reasoning intact and everyone else's, which is what "memory per trade per agent type" means in practice.
 
 ## 4. Role memory
 
-### 4.1 Layout
-
 ```
 memory/roles/<role>/
-  MEMORY.md               # index, ≤ 200 lines, one line per topic file, loaded every invocation
-  lessons/<slug>.md       # one lesson per file (see 4.2)
-  notes/<slug>.md         # working notes, scratch, never injected into trading-path prompts
-  profile.md              # what this role has learned about how to do its job (procedural), reviewed quarterly
+  MEMORY.md             # index ≤ 200 lines, loaded every session
+  playbook.md           # how this role does its job; versioned; revised by the role or the Coach
+  calibration.md        # generated: stated p vs outcome, expected R vs realised, counterfactual deltas, by desk and regime, with n and CIs
+  lessons/<slug>.md     # status proposed|adopted|retired; evidence refs; scope; valid_until
+  notes/<slug>.md       # scratch; never injected automatically
 ```
 
-### 4.2 Lesson file
+Lesson file frontmatter: `name, role, status, decided_by (coach), decided_at, known_at, valid_until, scope {desks, regimes, horizons}, evidence [dossier/trial/score refs]`, then statement, rationale, how-to-apply.
 
-```markdown
----
-name: results-window-veto-reduces-stopouts
-role: trade_manager
-status: hypothesis | validated | retired
-gate_id: G6-2026-11-03-a          # required when validated
-known_at: 2026-10-04T11:20:00+05:30
-valid_until: 2027-04-04            # re-validation due; consolidation retires after this
-scope: {sleeves: [sip_orb], regimes: [any]}
-evidence:
-  - dossier: 7f2c…                 # verbatim sources
-  - dossier: 91aa…
-  - trial: exp_sip_orb_results_veto_v1
----
-Statement (one falsifiable sentence).
-Rationale (≤ 10 lines).
-How to apply (categorical instruction only; no numbers).
-```
+Injection: adopted lessons in scope are included in the role's context (bounded by a per-role count the Coach sets in the playbook); proposed lessons are visible to the role as "under review"; retired lessons are visible only to reviews.
 
-### 4.3 Injection policy
-
-| Prompt type | May include |
-|---|---|
-| Trading-path (vetting, hold actions) | `validated` lessons in scope, ≤ 5, plus embargo-safe similar trades |
-| Research | `validated` + `hypothesis` lessons (labelled), full trial history |
-| Review | everything embargo-safe, including `retired` (labelled) |
-| Ops | ops memory, incidents, runbooks |
-
-### 4.4 Lesson lifecycle
-
-1. Post-Trade Reviewer proposes a lesson (`hypothesis`) with evidence links.
-2. Quant Researcher may convert it into a pre-registered trial (the lesson's implied rule as an A/B on holdout).
-3. Validation Reviewer sets `validated` on a passed G6 (recording `gate_id`) or `retired` on failure.
-4. Consolidation job retires lessons past `valid_until` and files a re-validation item in the backlog.
-
-## 5. Desk knowledge (reference, read-only)
+## 5. Desk memory
 
 ```
-memory/desk/
-  cost-model.md            # rates by segment, effective dates, calibration history (numbers live in rule tables; this explains them)
-  universe.md              # how the point-in-time universe is built
-  instruments.md           # lot sizes, freeze limits, expiries — pointer to rule tables
-  regulation.md            # SEBI/NSE/Zerodha rules that bind the desk, with circular references
-  gates.md                 # gate register, mirrors spec.md §9
-  sleeves/<sleeve_id>.md   # each sleeve's thesis, evidence, parameters (numbers as references to config), status history
+memory/desks/<desk_id>/
+  CHARTER.md            # CIO-owned
+  playbook.md           # desk procedure; Strategist curates; Coach revises with evidence
+  MEMORY.md             # index
+  watchlist.md          # current, with reasons and dates
+  regimes.md            # the desk's own regime notes
+  lessons/              # desk-level lessons (adopted by Coach)
+  meetings/YYYY-MM-DD.md# minutes with positions and decisions
+```
+
+## 6. Firm memory
+
+```
+memory/firm/
+  MEMORY.md
+  strategy.md           # CIO's firm strategy and allocation rationale history
+  risk-guidance.md      # Risk Office's standing guidance per desk
+  lessons-index.md      # adopted lessons across roles (Coach)
+  market-knowledge/     # cost arithmetic, microstructure notes, regulation pointers — proposed by any role, adopted by Coach/Compliance
   glossary.md
 ```
 
-Changed only by PR. The Compliance Auditor and Quant Researcher propose changes; the Principal merges those that alter trading behaviour.
+## 7. Retrieval
 
-## 6. Research memory
+`memory:recall(query, scope[], as_of, k)`:
 
-- **Trial ledger** (PostgreSQL, `research_trials` — schema in `research.md`): the authoritative record of every backtest.
-- **Experiments** (`research/experiments/<experiment_id>/`): `preregistration.md` (committed before the run), `report.md`, `artefacts/` (paths to Parquet outputs), `verdict.md` (reviewer). Git history is the audit trail.
-- **Idea forest** (`memory/roles/quant_researcher/notes/idea-forest.md`): a tree of hypotheses tried, with links to experiments and dispositions, so the Researcher does not re-run what was already falsified (RD-Agent(Q) "history-aware synthesis").
+1. Candidate items from the requested scopes with `known_at < as_of`.
+2. Strip outcome fields whose `known_at > as_of`.
+3. Rank: PostgreSQL full-text (BM25-like) + recency decay with a half-life the requesting role's playbook sets (default 90 days).
+4. Return ≤ k structured summaries (≤ 300 tokens each) with references; log the retrieval (ids, cut-off) in the invocation evidence.
 
-## 7. Ops memory
+`memory:recall_similar_trades(desk_id?, symbol?, tags[], as_of, k)` is the dossier-specialised form.
 
-- `memory/ops/incidents/YYYY-MM-DD-<slug>.md`: symptom, timeline, cause, fix, follow-ups (the v1 memory notes are the model: `sidecar-token-collision`, etc.).
-- `memory/ops/baselines.md`: normal ranges for health metrics, used by the checklist skill.
-- Runbooks are skills (`skills.md` §6), not memory, so they are versioned with tests.
+No embeddings in v2.0 (ADR-003); pgvector is a later ADR if recall proves insufficient.
 
-## 8. Consolidation ("sleep-time") job
+## 8. Consolidation (nightly, 22:30 IST)
 
-Runs nightly at 22:30 IST after the research shift, as an engine job that may invoke a small agent session (`claude-haiku-4-5`) for summarisation only:
+Each role runs a short curation session on its own memory (index, merge duplicates, mark `notes/` for archive, propose `valid_until` extensions), producing a diff. The Coach reviews the diffs (adopt/retire decisions, playbook impacts). A deterministic script then rebuilds indexes, archives, and writes the memory health report (counts by status, retrievals per day, embargo violations detected — must be zero). Evidence is never deleted.
 
-1. Re-index role `MEMORY.md` files (deterministic script) and fail if any index exceeds 200 lines.
-2. Retire lessons past `valid_until`; file re-validation backlog items.
-3. Archive dossiers past retention into cold storage (evidence preserved, sections frozen).
-4. Produce a one-page memory health report (counts by status, retrievals per day, embargo violations detected = must be zero) into the desk journal.
-5. Never merges or rewrites lessons automatically; proposed merges go to the Validation Reviewer.
+## 9. Security
 
-## 9. Security of memory
+- Writes only through scoped tools; hooks block direct writes outside a role's paths.
+- External text (announcements, circulars) enters memory only as tagged items with `source_ref`; prompts state it is data.
+- No credentials or account identifiers in memory; a linter runs on every write.
+- Poisoning containment: `notes/` never auto-injects; a lesson reaches trading context only after the Coach adopts it.
 
-- Agents write only through tools that enforce scope; direct filesystem writes outside the allowed paths are blocked by hooks.
-- Read-write scratch (`notes/`) is never injected into trading-path prompts, which bounds prompt-injection reach (a poisoned note cannot become a validated lesson without the Reviewer and a gate).
-- Announcements and other external text enter memory only as tagged features with `source_ref`, never as raw instructions; the tagging prompt treats the text as data.
-- No credentials, tokens or account identifiers are ever stored in memory (constitution VIII.4); a linter runs on every memory write.
-
-## 10. Data model (summary; full DDL in `plan.md` §7)
+## 10. Data model (summary)
 
 | Table | Purpose |
 |---|---|
-| `dossiers` | one row per trade; state, sleeve, symbol, engine fields, timestamps, hash chain |
-| `dossier_sections` | role, dossier_id, seq, content, written_at, known_at, invocation_id |
-| `dossier_events` | transitions and engine events |
-| `memory_items` | mirrored role memory (role, path, content, status, known_at, valid_until, version, prior_hash) |
-| `memory_retrievals` | audit of what was returned to whom, with embargo cut-off |
-| `invocations` | every agent invocation with cost, model, prompt version, input/output refs |
-| `journal_entries` | desk journal structured rows |
+| `dossiers`, `dossier_sections`, `dossier_events`, `dossier_evidence`, `dossier_counterfactuals` | trade memory |
+| `memory_items` (scope, path, content, status, known_at, valid_until, version, prior_hash, actor) | mirrored markdown memory |
+| `memory_retrievals` | audit of what was returned, to whom, with cut-off |
+| `decision_scores` (invocation_id, role, desk, type, stated_p, outcome, expected_r, realised_r, counterfactual_deltas, process_flags) | calibration inputs |
+| `playbook_versions` | role and desk playbooks with diffs and rationale |
+| `invocations` | every session with cost, model, prompt/skill versions, refs |
 
 ## 11. Acceptance scenarios
 
-- **M1 Embargo.** Given dossier A closed on day D with a review on D+1, When recall runs for `as_of = D 10:00`, Then A is returned without accounting or review fields and the retrieval log records the cut-off.
-- **M2 Own section only.** Given the Trade Manager attempts to write to `sections/risk_officer.md`, When the tool is called, Then it is denied and logged.
-- **M3 Validated only.** Given a `hypothesis` lesson in scope, When a vetting prompt is assembled, Then the lesson is absent; after `validated` with a gate id, it is present.
-- **M4 Index bound.** Given a role index exceeding 200 lines, When consolidation runs, Then the job fails the memory health check and alerts.
-- **M5 Replay.** Given an invocation id, When replay is requested, Then the same inputs (by reference hash) are reassembled and the stored output is shown alongside a fresh run's output for diff.
+- **M1** Time-aware recall strips outcomes and later reviews (as in spec S5).
+- **M2** A role cannot write another role's section (denied, logged).
+- **M3** A `proposed` lesson is absent from a Trader's context; once `adopted` it is present; once `retired` it is absent.
+- **M4** Re-invoking a Position Manager after a restart shows its own prior actions and the Trader's plan in context.
+- **M5** Replay of an invocation reassembles the same references and shows stored vs fresh output.
+- **M6** Consolidation fails the health check if any index exceeds 200 lines or any embargo violation is detected.

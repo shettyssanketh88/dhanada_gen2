@@ -8,11 +8,13 @@
 |---|---|---|---|
 | 0.1 Repo, CI, release workflow, structural no-LLM test, hooks scaffolding | `001-repo-and-ci` | DH2-DEV-001/002 | CI green; release blocked on failing tests |
 | 0.2 Contracts: all decision objects and runtime records | `002-contracts` | DH2-FIRM-003/004 | Schema tests |
-| 0.3 Rails: `rails/RAILS.md`, `ips.yaml` loader, market rules with `effective_from`, rail evaluation library | `003-rails` | DH2-RAIL-001/002 | Every rail unit-tested; rail event recorded with id |
+| 0.3 Rails: `rails/RAILS.md`, `ips.yaml` loader, rail evaluation library | `003-rails` | DH2-RAIL-001/002 | Every rail unit-tested; rail event recorded with id |
+| 0.3a [P] Rule catalogue and feeds: `rails/market_rules/` schema (A1–A19, B1–B10 with sources, effective dates, `[verify]` flags), feed pollers (surveillance lists, ban list, price bands, MIS list, haircuts, freeze quantities, calendar, circulars), compliance rails (`rails.compliance.*`) | `003a-rule-catalogue` | DH2-CMP-001/003/009 | Rails reproduce catalogue rows on dated fixtures; feeds refresh idempotently |
 | 0.4 [P] Market data: Kite adapter (token, static IP, order-rate bucket), `full` ticker, bars, REST fallback, instrument master | `004-market-data` | DH2-DAT-001, DH2-TOOL-006 | Recorded ticks → bars; IP mismatch → state |
 | 0.5 [P] Historical import and point-in-time universe, delistings, NSE feeds with `published_at` | `005-historical-data` | DH2-DAT-002/003 | Universe as-of differs by date; delisted present |
 | 0.6 [P] Calculators `calc:*` with versioning and pinned tests | `006-calculators` | DH2-TOOL-002 | Each calculator reproducible from stored inputs |
-| 0.7 [P] Accounting + counterfactual baselines + cost calibration | `007-accounting` | DH2-TOOL-004, DH2-DSK-007 | Worked examples; baselines on a synthetic trade |
+| 0.7 [P] Accounting + counterfactual baselines + cost calibration + reconciliation engine (ledger vs broker snapshots, contract notes) + P&L attribution + tax ledger | `007-accounting-and-books` | DH2-TOOL-004, DH2-PIPE-009, DH2-CTL-003/004 | Worked examples; synthetic break detected; attribution sums to net P&L; STT per A18 |
+| 0.7a [P] Treasury instruments: margin/basket-margin readers, peak-margin snapshot simulator, settlement calendar, collateral haircuts; TCA instruments: implementation shortfall per fill | `007a-treasury-tca-instruments` | DH2-CTL-001/002/005 | Margin plan reproduces a worked expiry-week example; shortfall computed on fixture fills |
 | 0.8 [P] Sim/replay engine (rule mode) with parity harness | `008-sim-engine` | DH2-TOOL-003 | T7; parity passes |
 | 0.9 Trial ledger + stats + zero-alpha calibration tool | `009-ledger` | DH2-LRN-003 | L3; pinned DSR/PSR/MTRL |
 | 0.10 Dossier store: states, sections, events, evidence, counterfactual slots, projection, time-aware retrieval | `010-dossiers` | DH2-DSK-001, DH2-MEM-001/002/005 | M1, M2, M5 |
@@ -28,7 +30,9 @@
 | 1.3 Memory service: role/desk/firm memory, lessons with status, retrieval, consolidation, linter | `015-memory` | DH2-MEM-003/004/006 | M3, M4, M6 |
 | 1.4 Scheduler + events + meetings orchestration + journal/digest delivery | `016-scheduler-meetings` | DH2-FIRM-005, DH2-OPS-001/002 | O1, O2, O5; a meeting produces minutes with positions |
 | 1.5 Skills framework + shared skills + eval runner in CI | `017-skills-framework` | DH2-DEV-001 | State-graded evals run |
-| 1.6 [P] Operations Engineer + Compliance Auditor roles and skills | `018-operations-roles` | DH2-OPS-003, DH2-CMP-002/003 | O3; weekly audit produced |
+| 1.6 [P] Operations Engineer role and skills incl. security/kill-switch ownership | `018-operations-role` | DH2-OPS-003 | O3 |
+| 1.6a [P] Compliance Officers (Regulatory, Broker): pre-clearance flow, surveillance detectors and dispositions, holds, EOD close, circular tracking, self-audit | `018a-compliance-officers` | DH2-CMP-002/004/005/006/009 | S12, C1–C5 |
+| 1.6b [P] Treasury & Settlement Manager, Books & Records Agent, Execution Quality Analyst roles and skills | `018b-control-roles` | DH2-CTL-001…005 | S13, S14; first TCA report |
 | 1.7 [P] Feature service + expression language + strategy-book store and validation (`books:*`) | `019-features-and-books` | DH2-PIPE-003/004/005, DH2-TOOL-007/008 | T11, T14; a book validates and versions |
 | 1.7a [P] Rule Watch + shadow recorder + execution log | `019a-rule-watch` | DH2-EXEC-001/002/006 | T11, T13 |
 | 1.7b [P] Pipeline roles: Stock Scanner, Data Ingestor, Senior Analyst, Execution Agent (event mode), Recalibration Agent, Trade Reviewer + skills | `019b-pipeline-roles` | DH2-PIPE-001/002/006/008, DH2-EXEC-003/004/005 | S1, S3, S4, S5 on paper |
@@ -57,7 +61,7 @@ Exit criterion: three desks on paper across ≥ 2 horizons; weekly coaching revi
 |---|---|---|---|
 | 3.1 Live Kite execution (place/modify/cancel, MIS and GTT protective orders, square-off, reconciliation, fault-injection suite) | `027-live-execution` | DH2-TOOL-001/005/006 | T1–T6 against a live account with quantity 1 during a supervised session |
 | 3.2 Live hardening: separate DB/accounts, secrets audit, backup/restore drill, static-IP monitoring, Principal 2FA | `028-live-hardening` | DH2-CMP-001, plan.md §8 | Restore drill; secrets scan clean |
-| 3.3 IPS live section and rails verification; kill drill on release | `029-ips-live` | DH2-RAIL-* | O4 |
+| 3.3 IPS live section and rails verification; kill drill on release; `broker.terms_confirmed` rail and the Zerodha confirmation (NC-7); `[verify]` catalogue items resolved (NC-8) | `029-ips-live` | DH2-RAIL-*, DH2-CMP-008 | O4, C6 |
 
 ## Phase 4 — First capital and firm growth · ongoing
 

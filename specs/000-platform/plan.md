@@ -50,7 +50,7 @@ dhanada-v2/
   .specify/memory/constitution.md
   specs/000-platform/…  specs/NNN-<feature>/…
   docs/ADR/  docs/research/  docs/lessons-from-v1.md
-  rails/            # RAILS.md, ips.yaml, market_rules/ (dated), health.yaml   ← Principal-owned
+  rails/            # RAILS.md, ips.yaml, health.yaml (Principal-owned); market_rules/ (dated rule catalogue A*/B*, feeds; Compliance-Officer-owned via PR)
   agents/<role>/ROLE.md
   desks/<desk_id>/CHARTER.md, PROPOSAL.md, templates/ (Analyst strategy templates), playbook.md
   skills/<name>/…
@@ -96,6 +96,12 @@ Structural test: nothing under `engine/` imports an LLM client.
 | `RecalibrationReport`, `TemplateRecommendations` | Recalibration Agent | per_strategy_stats, regime_assessment, changes_requested[] |
 | `TradeReview` | Trade Reviewer | per_agent_scores, findings, lesson_proposals[], meeting_items[] |
 | `WatchModeReport` | code | fidelity, latency, slippage, cost, escalation quality, outcome deltas per mode, n, CIs |
+| `ComplianceClearance` | Compliance Officers | book_version, per_strategy {decision, conditions[], rule_ids[], reasons} |
+| `ComplianceAlert`, `ComplianceHold`, `ComplianceDayReport` | detectors / officers | alert kind, rule id, disposition, hold scope, timelines |
+| `MarginPlan`, `SettlementReport` | Treasury | per-desk headroom, actions, expected penalties, obligations |
+| `ReconciliationReport`, `PnLAttribution`, `TaxLedgerEntry` | Books & Records | breaks[], dispositions[], clean; attribution; STT/classification/turnover |
+| `TCAReport`, `CostModelCalibration` | Execution Quality Analyst | shortfall_bps, slippage_r, impact, recommendations; versioned model |
+| `RuleCatalogueEntry` | Compliance Officers | id (A*/B*), source, constraint, check_timing, data_needed, consequence, effective_from, verify_flag |
 | `CoachingReport`, `PlaybookRevision`, `LessonDecision` | Coach | diffs, rationale, evidence, n |
 | `AllocationDecision`, `CharterDecision` | CIO | per-desk capital and budget, environment, rationale, evidence |
 | `PreRegistration`, `TrialRecord`, `TrialReport`, `DeskProposal`, `ReviewVerdict` | Research Lab | see learning.md |
@@ -113,6 +119,7 @@ Decision objects carry the agent's numbers; validation checks type, rails and co
 | Dossiers & books | `dossiers`, `dossier_sections`, `dossier_events`, `dossier_evidence`, `dossier_counterfactuals`, `subscriptions`, `strategy_books` (versioned), `book_reviews`, `revision_requests`, `execution_log` (mode, book_version, strategy_id), `watch_mode_reports` |
 | Orders | `order_intents`, `orders`, `order_events`, `fills`, `positions`, `cash_ledger`, `protective_orders`, `gtt_brackets` |
 | Rails & risk | `rail_events`, `kill_events`, `risk_reviews`, `risk_notices`, `desk_guidance` |
+| Compliance & control | `rule_catalogue(effective_from)`, `surveillance_lists(as_of)`, `ban_list(as_of)`, `price_bands(as_of)`, `broker_feeds(as_of)`, `compliance_clearances`, `compliance_alerts`, `compliance_holds`, `compliance_day_reports`, `margin_plans`, `peak_margin_snapshots`, `settlement_obligations`, `reconciliations`, `recon_breaks`, `pnl_attribution_daily`, `tax_ledger`, `tca_fills`, `cost_model_versions` |
 | Market data | `instruments(as_of)`, `quote_snapshots`, `announcements`, `corporate_actions`, `results_calendar`, `universe_pit`, `delistings`, `holidays`, `market_rules(effective_from)` |
 | Features | `feature_snapshots`, `feature_health` |
 | Learning | `decision_scores`, `playbook_versions`, `lessons`, `evals`, `eval_runs`, `skill_change_requests` |
@@ -159,3 +166,6 @@ Export bars and daily bars to Parquet; import v1 trials as `v1_*` experiments; i
 | NC-4 | Notification channel | Email (existing bot) + Telegram |
 | NC-5 | Initial desks to charter for paper | Positional Momentum Desk (weekly books), Event/Catalyst Desk (weekly books), Intraday Breakout Desk (session books) |
 | NC-6 | Agent Watch concurrency at start | 10 stocks per desk in paper (≈ USD 8–15 per desk-day at 1-minute digests), reviewed after the first watch-mode report |
+| NC-7 | Zerodha terms of use on unattended automated trading (B6) | Broker Compliance Officer drafts the query; live blocked by rail `broker.terms_confirmed` until the Principal records written confirmation |
+| NC-8 | `[verify]` items in the rule catalogue (Feb-2025 circular clauses, freeze quantities, index-futures gross limit, 2026 timing changes) | Regulatory Compliance Officer resolves from primary text before Phase 3 |
+| NC-9 | Retention period | 8 years (Stock Brokers Regulations 2026 standard) |

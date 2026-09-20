@@ -8,17 +8,24 @@
 |---|---|---|---|
 | 07:30 | `ops.morning` | Code checks → Operations Engineer on failure | Token, egress IP, instrument master, rule tables, feeds, DB/disk. No token → one Principal reminder; firm `awaiting_login`; recheck every 10 min to 09:10. |
 | 08:30 | `data.prep` | Code | Announcements, calendars, corporate actions, features, feature health, universe as-of. |
+| 07:40 | `books.sod` | Books & Records Agent | Start-of-day clean book: ledger vs broker positions/holdings/funds/orders; a break holds new book approvals. |
 | 07:45 | `desks.scan` | Stock Scanners | Watchlists with reasons and priority; dossiers opened. |
+| 08:10 | `compliance.feeds` | Code + Broker Compliance Officer on change | Surveillance lists, ban list, price bands, MIS list, freeze quantities, calendar refreshed; catalogue diff. |
+| 08:15 | `treasury.plan` | Treasury & Settlement Manager | Margin and cash plan per desk; settlement obligations; funds actions to the Principal. |
 | 08:00 | `desks.ingest` | Data Ingestors | Data packs per stock; quality flags. |
-| 08:30 | `desks.books` | Senior Analysts → Risk Officer | Strategy books drafted and reviewed (intraday desks daily; swing/positional desks weekly on Monday with daily check-ins). |
+| 08:30 | `desks.books` | Senior Analysts → Risk Officer + both Compliance Officers | Strategy books drafted, economically reviewed and pre-cleared (intraday desks daily; swing/positional desks weekly on Monday with daily check-ins). |
 | 08:45 | `desks.open` | Each desk (Senior Analyst chairs) | Desk meeting per charter: emphasis, escalation policy, template notes. |
 | 09:00 | `firm.open` | CIO shift (short) | Confirms desks armed, allocations and budgets applied, rails status; journal opening note. |
 | 09:15–15:30 | `market.session` | Code + roles on events | Feature service every minute; Rule Watch per tick; Agent Watch sessions per CIO cap; Execution Agents on events; Analysts on escalations (90 s) and revision requests; Scanners' intraday re-scans per charter; Risk Officer reviews (120 s) and sweeps every 30 min. |
 | per charter (default every 60–90 min) | `desks.recalibrate` | Recalibration Agents | Intraday pass: family stats, regime, revision requests. |
+| every 1–5 min | `compliance.surveil` | Detectors → Compliance Officers on alert | OTR, cancel ratios, self-match, volume share, closing window, position limits, RMS bursts; holds. |
+| every 5 min | `treasury.peak` | Detector → Treasury on breach | Peak-margin headroom incl. MTM; reduce requests. |
 | 15:00 | `carry.window` | Execution Agents per book rules; Analysts on escalation | Carries only as the book specifies; uncovered cases escalate. |
 | 15:15 | `squareoff` | Code | MIS flatten for anything not converted/exited; verification 15:20/15:23. |
-| 15:35 | `eod.reconcile` | Code | Final reconciliation; mismatches → Risk Office + Ops. |
+| 15:35 | `eod.reconcile` | Code + Books & Records | Final reconciliation; breaks → Books & Records disposition, Risk Officer, Ops. |
 | 16:00 | `accounting.close` | Code | Fills, costs, R, counterfactuals, desk and firm rollups, decision scores. |
+| 16:05 | `compliance.close` | Both Compliance Officers + Books & Records | EOD compliance close; P&L attribution; tax ledger; expected penalties (with Treasury). |
+| 16:20 | `tca.daily` | Execution Quality Analyst | Implementation shortfall per fill; recommendations. |
 | 16:30 | `desks.review` | Trade Reviewers | Per-agent reviews for the day's closes, with counterfactuals per version and mode. |
 | 17:00 | `firm.journal` | CIO shift | Daily journal to the Principal. |
 | 17:30 | `coach.daily` | Coach | Scores read; `REVIEW` sentinels handled; notes. |
@@ -36,7 +43,11 @@ Event-driven invocations during the session have deadlines: book review 120 s; E
 | Sat 09:00 | `desks.week` | Desk Reviewers + desk teams | Weekly desk reviews; meeting items |
 | Sat 10:00 | `coach.week` | Coach (per desk) | Coaching reports; playbook revisions; lesson decisions; change requests |
 | Sat 11:00 | `risk.week` | Risk Office | Cost calibration; guidance updates; risk section of the digest |
-| Sat 11:30 | `compliance.week` | Compliance Auditor | Compliance report; rule PRs |
+| Sat 11:30 | `compliance.week` | Both Compliance Officers | Weekly self-audit; feed refresh; alert dispositions ≤ 30 days; rule PRs |
+| Sat 11:45 | `tca.week` | Execution Quality Analyst | Cost-model calibration proposal |
+| Half-yearly | `compliance.audit` | CIO chairs; officers, Books & Records, Ops | Evidence bundle to the Principal |
+| Quarterly | `treasury.settlement` | Treasury | Running-account settlement pre-funding |
+| Quarterly | `lab.revalidate` | Validation Reviewer | Re-validation of every live desk |
 | Sat 12:00 | `lab.week` | Research Lab + Validation Reviewer | Ledger audit; proposals readied |
 | Sat 14:00 | `firm.digest` | CIO | Weekly digest to the Principal |
 | 1st trading day 08:00 | `investment.committee` | CIO chairs | Allocations, charters, promotions, retirements; minutes |
@@ -67,6 +78,10 @@ Everything else is decided by agents and reported.
 | Protective orders | missing > 30 s | Re-place | Incident |
 | Feature health | failed test | Withhold and inform agents | Data Steward |
 | IPS proximity | ≥ 80 % of any limit | — | Risk Office notice + Principal alert |
+| Reconciliation break | any | Hold new book approvals | Books & Records + Principal (S13) |
+| OTR | ≥ 40 per segment | Alert | Regulatory Compliance Officer; hold at 200 |
+| Peak-margin headroom | < 20 % | — | Treasury reduce request; Principal if funds needed |
+| RMS rejection burst | ≥ 3 in 5 min on a desk | Pause the strategy's orders | Broker Compliance Officer |
 | LLM spend | ≥ 80 % of IPS daily budget | Warn CIO | At 100 %: stop non-essential sessions (research, consolidation) first; desks continue on reserved budget |
 | DB/disk/backup | thresholds | — | Ops |
 

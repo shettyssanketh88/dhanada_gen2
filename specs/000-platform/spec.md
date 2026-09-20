@@ -53,8 +53,8 @@ The Principal writes `rails/ips.yaml` (`[NC-1]`): total and paper capital; max d
    ┌───────▼─────────────────────────┐ ┌───────▼──────────────┐ ┌───────────────▼──────────┐
    │ DESK (pipeline instance) × N    │ │ RESEARCH LAB         │ │ OPERATIONS               │
    │  Stock Scanner                  │ │  Quant Researcher    │ │  Operations Engineer     │
-   │  Data Ingestor                  │ │  Validation Reviewer │ │  Compliance Auditor      │
-   │  Senior Analyst ──► Risk Officer│ │  Desk Designer       │ │  Skill Engineer          │
+   │  Data Ingestor                  │ │  Validation Reviewer │ │  Skill Engineer          │
+   │  Senior Analyst ──► Risk Officer│ │  Desk Designer       │ │                          │
    │  Execution Agent (Rule Watch /  │ └──────────────────────┘ └──────────────────────────┘
    │    Agent Watch)                 │
    │  Recalibration Agent            │

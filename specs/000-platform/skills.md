@@ -78,12 +78,36 @@ Rules: prompts assembled by scripts contain no anchoring numbers from the system
 | Operations Engineer | `diagnosing-incidents` | Bounded logs/metrics; runbook selection from allowlist; escalation | `logs.py`, `runbook.py list|run` |
 | Operations Engineer | `verifying-deploys` | Image tag, migrations, health, drill result | `verify_deploy.py` |
 | Operations Engineer | `writing-incident-reports` | Incident file in ops memory; follow-up PR | `incident.py` |
-| Compliance Auditor | `auditing-compliance` | Order-rate histogram, static IP log, token handling, audit chain, retention, rule versions | `ops_histogram.py`, `audit_chain_verify.py`, `rules_check.py` |
-| Compliance Auditor | `tracking-circulars` | Read circulars; propose dated rule changes as PRs | `circulars.py`, `rules_pr.py` |
+| Operations Engineer | `owning-security-and-kill-switch` | Secrets/token lifecycle, static-IP health, prompt-injection filtering on ingested text, drill and restart procedure | `secrets_audit.py`, `ip_health.py`, `injection_filter.py` |
 | Skill Engineer | `authoring-skills` | Scaffold with evals first; implement; open PR | wraps `skill-creator` |
 | Skill Engineer | `building-calculators` | New `calc:*` with tests and versioning | `calc_scaffold.py` |
 | Skill Engineer | `writing-evals` | Eval cases from real failures; state graders | `eval_scaffold.py` |
 | Skill Engineer | `releasing` | Release verification checklist; `disable-model-invocation: true` | `release_check.py` |
+
+## 5a. Compliance and control (see `compliance.md`)
+
+| Role | Skill | Purpose | Scripts |
+|---|---|---|---|
+| Regulatory Compliance Officer | `preclearing-books-regulatory` | Per-strategy clear/conditions/block on A1–A19 grounds from `compliance:preclear` findings | `preclear_context.py`, `decision.py validate` |
+| Regulatory Compliance Officer | `surveilling-trading` | Dispose detector alerts (OTR, cancel ratios, self-match, volume share, closing window, position limits); holds | `alerts.py`, `hold.py` |
+| Regulatory Compliance Officer | `closing-compliance-day` | EOD close report: tags, OTR, penalties, obligations, E-4, disclosures, retention | `eod_close.py` |
+| Regulatory Compliance Officer | `auditing-compliance` | Weekly and half-yearly self-audit; evidence bundle | `audit_chain_verify.py`, `rules_check.py`, `evidence_bundle.py` |
+| Regulatory Compliance Officer | `tracking-circulars` | Poll SEBI/NSE/BSE; diff catalogue; PR with effective dates | `circulars.py`, `rules_pr.py` |
+| Regulatory Compliance Officer | `classifying-tax-ledger` | Income classification rules, STT rates, turnover method | `tax_rules.py` |
+| Both officers | `maintaining-rule-catalogue` | Catalogue schema, sources, effective dates, `[verify]` resolution | `catalogue.py validate|diff` |
+| Broker Compliance Officer | `preclearing-books-broker` | Per-strategy decision on B1–B10 grounds (products, RMS, API, terms) | `preclear_context.py`, `decision.py validate` |
+| Broker Compliance Officer | `handling-rms-rejections` | Classify rejection bursts; hold; catalogue update | `rejections.py` |
+| Broker Compliance Officer | `refreshing-broker-feeds` | MIS list, haircuts, freeze quantities, timings, lot sizes weekly | `feeds.py refresh` |
+| Broker Compliance Officer | `tracking-broker-updates` | Bulletin, Z-Connect, Kite forum; terms-of-use watch (NC-7) | `broker_updates.py` |
+| Treasury & Settlement Manager | `planning-margin-and-cash` | Daily plan per desk; funds/pledge actions; expected penalties | `margin_plan.py`, `basket_margin.py` |
+| Treasury & Settlement Manager | `monitoring-peak-margin` | 5-minute headroom incl. MTM; reduce requests | `peak_margin.py` |
+| Treasury & Settlement Manager | `managing-settlement-obligations` | T+1 pay-in, short-delivery, E-4 ramps, quarterly settlement pre-funding | `settlement.py` |
+| Treasury & Settlement Manager | `managing-collateral` | Pledge/unpledge within the 50 % cash rule and haircuts | `collateral.py` |
+| Books & Records Agent | `reconciling-books` | Start-of-day, 15:35, 16:05 and contract-note reconciliation; break classification and disposition; hold requests | `recon.py run|dispose` |
+| Books & Records Agent | `attributing-pnl` | Daily attribution per desk | `attribution.py` |
+| Books & Records Agent | `keeping-tax-ledger` | STT, classification, turnover, 44AB alarm | `tax_ledger.py` |
+| Execution Quality Analyst | `analysing-execution-quality` | Implementation shortfall vs arrival/quote/VWAP per fill; per desk and family | `tca.py` |
+| Execution Quality Analyst | `calibrating-cost-model` | Versioned cost/slippage model from realised fills; PR to Skill Engineer | `cost_calibration.py` |
 
 ## 6. Shared
 
@@ -105,4 +129,8 @@ Each skill ships ≥ 3 evals graded on environment state, several from v1 failur
 - `running-backtests`: (a) no experiment id → refused; (b) crash → trial `failed`; (c) result carries N and k.
 - `running-morning-checklist`: (a) no token → one reminder; (b) IP mismatch → state and alert; (c) all green → no notification.
 
-pass^5 required for operations, risk and execution-adjacent skills.
+pass^5 required for operations, risk, compliance, treasury, reconciliation and execution-adjacent skills.
+
+- `preclearing-books-regulatory` / `-broker`: (a) ASM-listed stock with MIS → `block` with rule ids; (b) CNC with 100 % margin → `clear_with_conditions`; (c) findings empty → `clear` within deadline.
+- `reconciling-books`: (a) broker shows a position the ledger lacks → break, hold request; (b) clean → `clean: true`; (c) contract-note cost mismatch → journal adjustment with reason, never a fill rewrite.
+- `planning-margin-and-cash`: (a) E-4 stock futures → reduce/fund request; (b) headroom < 20 % → reduce request to the desk with the smallest expectancy; (c) quarterly settlement in 3 days → pre-fund note to the Principal.

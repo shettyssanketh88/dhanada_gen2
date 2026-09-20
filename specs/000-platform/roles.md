@@ -1,6 +1,6 @@
 # Roles — the firm's organisation chart
 
-*Companion to `spec.md` v2.1. Each role becomes `agents/<role>/ROLE.md` (frontmatter: model, effort, decision rights, tools, skills, memory scopes, budget, meeting participation) mapped to a Claude Agent SDK `AgentDefinition`. Roles decide; tools execute; the Coach and the Recalibration Agent measure and revise. The trading pipeline follows the Principal's scenario (`scenario-walkthrough.md`).*
+*Companion to `spec.md` v2.2. Each role becomes `agents/<role>/ROLE.md` (frontmatter: model, effort, decision rights, tools, skills, memory scopes, budget, meeting participation) mapped to a Claude Agent SDK `AgentDefinition`. Roles decide; tools execute; the Coach and the Recalibration Agent measure and revise. The trading pipeline follows the Principal's scenario (`scenario-walkthrough.md`).*
 
 Common properties of every role:
 
@@ -40,11 +40,12 @@ A desk is a chartered instance of this pipeline with a mandate (universe, horizo
 |---|---|
 | Decision rights | What data each watchlist stock needs, from which sources, at which granularity and depth; whether a data pack is fit to analyse; which gaps to flag or fill; which new sources to commission |
 | Model / effort | `claude-sonnet-5`, `medium` |
-| Triggers | After every scan; on data-quality alerts; nightly for the research universe |
-| Inputs | Watchlist; data catalogue; feature health; own memory of source reliability |
+| Triggers | After every scan; on data-quality alerts; nightly for the research universe; corporate-action and event calendar refresh daily |
+| Inputs | Watchlist; data catalogue; feature health; own memory of source reliability; NSE/BSE corporate actions, F&O contract adjustments, results, index rebalances, RBI/expiry calendar |
 | Outputs | `DataPack {symbol, as_of, bars[1m,15m,1d] refs, depth, volume_profile, fundamentals, announcements(published_at), results_calendar, corporate_actions, sector_index_context, derivatives_context, quality_flags[], excluded_windows[]}` |
 | Tools | `data:*` (read and ingest jobs), `features:test`, `desk:attach_datapack`, `git:open_pr(data/)` for new sources, `memory:*` |
-| Skills | `building-data-packs`, `checking-data-quality`, `commissioning-data-sources` |
+| Skills | `building-data-packs`, `checking-data-quality`, `commissioning-data-sources`, `maintaining-event-calendar` |
+| Folded duty | **Event and corporate-actions calendar** (from the roles gap analysis): ex-dates, F&O lot/strike adjustments, merger/demerger auto-closes, results, expiry and rebalance blackouts, published to the Analyst, Risk Officer, Treasury and Books & Records. |
 
 ### 3. Senior Analyst
 
@@ -63,7 +64,7 @@ A desk is a chartered instance of this pipeline with a mandate (universe, horizo
 
 | Field | Value |
 |---|---|
-| Decision rights | Approve / modify / reject each strategy in each book version; standing desk guidance (risk per strategy, concurrency, correlation, cost-per-R floor); pause a desk (L1); firm flat-and-halt (L2) within the IPS; auto-approval rules for minor revisions within guidance |
+| Decision rights | Approve / modify / reject each strategy in each book version on economic grounds; standing desk guidance (risk per strategy, concurrency, correlation, cost-per-R floor, **liquidity caps as % of ADV and days-to-liquidate**); pause a desk (L1); firm flat-and-halt (L2) within the IPS; auto-approval rules for minor revisions within guidance |
 | Model / effort | `claude-opus-5`, `high` |
 | Triggers | Every new book version (deadline 120 s in session; outside session, before the open); book sweep every 30 minutes; rail events; reconciliation mismatches; weekly cost calibration |
 | Inputs | Book, dossier, firm exposure and correlation, cost per R per strategy, liquidity, event windows, Analyst calibration |
@@ -128,7 +129,7 @@ Decision rights: adopt/retire lessons; revise role and desk playbooks (including
 Backlog selection, experiment design (pre-registered), interpretation, proposals to the Desk Designer. `claude-opus-5`/`high`. Skills: `researching-hypotheses`, `preregistering-experiments`, `running-backtests`, `reporting-trials`.
 
 ### 11. Validation Reviewer
-Adversarial verdict on desk proposals, template/playbook revisions with trading impact, lesson adoptions, and watch-mode evaluation reports. `claude-opus-5`/`xhigh`. Never the author. Skills: `reviewing-proposals`, `auditing-ledger`.
+Adversarial verdict on desk proposals, template/playbook revisions with trading impact, lesson adoptions, and watch-mode evaluation reports; **periodic re-validation** of every live desk (quarterly: live vs backtest drift, calibration, DSR at current N) in the SR 11-7 sense. `claude-opus-5`/`xhigh`. Never the author. Skills: `reviewing-proposals`, `auditing-ledger`, `revalidating-desks`.
 
 ### 12. Desk Designer
 Composes desk proposals (charter, pipeline configuration, Analyst templates v1, self-declared success criteria, paper capital) from evidence; iterates with the CIO. `claude-opus-5`/`high`. Skills: `designing-desks`, `writing-templates`.
@@ -139,9 +140,79 @@ Composes desk proposals (charter, pipeline configuration, Analyst templates v1, 
 
 ## D. Operations
 
-### 13. Operations Engineer — morning checklist, incidents, deploy verification, runbooks. `claude-sonnet-5`.
-### 14. Compliance Auditor — weekly audits, circulars → dated rule PRs. `claude-opus-5`/`high`.
-### 15. Skill Engineer — new skills, calculators, features for the expression language, watch improvements; PRs with evals; agent review; Principal informed. `claude-opus-5`/`high`.
+### 13. Operations Engineer — morning checklist, incidents, deploy verification, runbooks; **named security and kill-switch owner**: secrets and token lifecycle, static-IP health, prompt-injection filtering on ingested text, kill-switch drills and restart procedure. `claude-sonnet-5`.
+### 14. Skill Engineer — new skills, calculators, features for the expression language, watch improvements; PRs with evals; agent review; Principal informed. `claude-opus-5`/`high`.
+
+---
+
+## E. Compliance and control (see `compliance.md`)
+
+The roles gap analysis (`docs/research/2026-09-20-firm-roles-gap-analysis.md`) found the roster thin where real firms are thick: rules, money and truth. Five roles are added; the former Compliance Auditor is replaced by the two officers.
+
+### 15. Regulatory Compliance Officer (SEBI, NSE/BSE, NSE Clearing, tax)
+
+| Field | Value |
+|---|---|
+| Decision rights | Pre-clearance verdict per strategy per book version on regulatory grounds (`clear | clear_with_conditions | block`); interpretation of circulars and grey cases; compliance holds on a desk or symbol; surveillance alert disposition; retention policy; tax-ledger classification rules; Principal escalations |
+| Model / effort | `claude-opus-5`, `high` |
+| Owns | Rule catalogue rows A1–A19 in `rails/market_rules/` with sources and effective dates; surveillance list, ban list, price-band, calendar and position-limit feeds |
+| Triggers | Every book version (deadline 120 s in session); intraday detector alerts; EOD compliance close; weekly and half-yearly self-audit; circular published |
+| Tools | `compliance:preclear/decide/hold/dispose`, `rules:read/propose`, `audit:read`, `git:open_pr(rails/market_rules/)`, `memory:*`, `notify:principal` |
+| Skills | `preclearing-books-regulatory`, `surveilling-trading`, `closing-compliance-day`, `auditing-compliance`, `tracking-circulars`, `maintaining-rule-catalogue`, `classifying-tax-ledger` |
+| Forbidden | Authoring books; placing orders; changing rails outside PRs |
+
+### 16. Broker Compliance Officer (Zerodha / Kite Connect)
+
+| Field | Value |
+|---|---|
+| Decision rights | Pre-clearance verdict per strategy on broker-rule grounds (products, RMS blocks, API limits, terms of use); holds on RMS rejection patterns; broker-relationship escalations (terms of use for unattended trading, NC-7); broker-rule catalogue maintenance |
+| Model / effort | `claude-opus-5`, `high` |
+| Owns | Rule catalogue rows B1–B10; feeds: MIS scrip list, approved securities and haircuts, square-off timings, freeze quantities, bulletin/Z-Connect/forum |
+| Triggers | Every book version; RMS rejection events; EOD; weekly feed refresh; broker updates |
+| Tools | `compliance:preclear/decide/hold`, `rules:read/propose`, `broker:read_rejections`, `git:open_pr(rails/market_rules/)`, `memory:*`, `notify:principal` |
+| Skills | `preclearing-books-broker`, `handling-rms-rejections`, `refreshing-broker-feeds`, `tracking-broker-updates`, `maintaining-rule-catalogue` |
+| Forbidden | As above |
+
+### 17. Treasury & Settlement Manager
+
+| Field | Value |
+|---|---|
+| Decision rights | Daily cash and margin plan: how much margin headroom each desk gets, when to move funds, what to pledge/unpledge, whether to pre-fund for quarterly settlement, how to handle expiry-week and physical-settlement margin ramps; intraday margin actions (request a desk to reduce, ask the Risk Officer for a pause); settlement obligations (T+1 pay-in, short-delivery avoidance, E-4 stock F&O exposure) |
+| Model / effort | `claude-opus-5`, `high` |
+| Triggers | 08:15 pre-open plan; every 5 minutes in session (peak-margin snapshots); EOD; quarterly settlement dates; expiry weeks |
+| Inputs | Broker funds/margins (`/margins`, `/margins/basket`), positions, collateral and haircuts, calendar (expiries, settlement, holidays), desks' expected order flow from approved books |
+| Outputs | `MarginPlan {per_desk_headroom, actions[] {transfer, pledge, unpledge, reduce_request}, expected_penalties}`; `SettlementReport` |
+| Tools | `treasury:read_funds/margins/collateral`, `treasury:plan`, `treasury:request_reduce(desk)`, `calc:margin`, `memory:*`, `notify:principal` (funds transfers require the Principal's bank action) |
+| Skills | `planning-margin-and-cash`, `monitoring-peak-margin`, `managing-settlement-obligations`, `managing-collateral` |
+| Forbidden | Placing or modifying orders; changing IPS |
+
+### 18. Books & Records Agent (reconciliation, P&L attribution, tax ledger)
+
+| Field | Value |
+|---|---|
+| Decision rights | Whether the firm's books are clean (start-of-day and EOD); break classification and disposition; whether a break is severe enough to request a compliance hold or a desk pause; P&L attribution methodology within the accounting rules; tax-ledger entries (STT, classification per A18, turnover) |
+| Model / effort | `claude-sonnet-5`, `medium`; `claude-opus-5` on unresolved breaks |
+| Triggers | 07:40 start-of-day clean book; 15:35 and 16:05 EOD reconciliation; contract-note arrival (T+1); weekly and quarterly closes |
+| Inputs | Internal ledger vs Kite positions/holdings/funds/orders/trades; contract notes; corporate-action calendar; cost tables |
+| Outputs | `ReconciliationReport {breaks[], dispositions[], clean: bool}`, `PnLAttribution {per desk: alpha, costs, slippage, fees, carry, penalties}`, `TaxLedger` entries and the 44AB turnover alarm |
+| Tools | `recon:run/read`, `ledger:read/adjust(with reason)`, `broker:read_book`, `compliance:request_hold`, `memory:*` |
+| Skills | `reconciling-books`, `attributing-pnl`, `keeping-tax-ledger` |
+| Forbidden | Placing orders; editing fills (adjustments are journal entries with reasons, never rewrites) |
+| Note | This is the independent truth check the TradeTrap evidence calls for: a break between the internal ledger and the broker halts new books until disposed. |
+
+### 19. Execution Quality Analyst (TCA)
+
+| Field | Value |
+|---|---|
+| Decision rights | Execution-quality assessment per desk and per strategy family (implementation shortfall vs arrival price, vs quote at send, vs VWAP; market-impact estimates); recommendations to Analysts (order types, zones, timing) and to the Coach; calibration of the firm's cost and slippage model used by calculators and the sim engine |
+| Model / effort | `claude-sonnet-5`, `medium`; `claude-opus-5` weekly |
+| Triggers | 16:20 daily; weekly; on request from the Recalibration Agent or Risk Officer |
+| Inputs | Fills with reference prices, bid/ask at decision, order working logs, feature snapshots, shadow-mode would-be fills |
+| Outputs | `TCAReport {per desk/family: shortfall_bps, slippage_r, impact, order-type breakdown, recommendations}`, `CostModelCalibration` (versioned, adopted by the Skill Engineer via PR) |
+| Tools | `tca:read_fills`, `tca:report`, `calc:cost`, `skills:request_change`, `memory:*` |
+| Skills | `analysing-execution-quality`, `calibrating-cost-model` |
+| Forbidden | Placing orders; changing books |
+
 
 ---
 
@@ -151,7 +222,8 @@ Composes desk proposals (charter, pipeline configuration, Analyst templates v1, 
 |---|---|---|---|---|
 | Desk meeting | Senior Analyst | Scanner, Ingestor, Execution, Recalibration, Reviewer | Per charter (default daily pre-open + weekly) | Watchlist emphasis, template changes, escalation policy |
 | Risk conference | Risk Officer | Analysts and Execution Agents of affected desks; CIO optional | On notice or weekly | Guidance, pauses |
-| Investment committee | CIO | Risk Officer, Coach, Desk Designer, Validation Reviewer, desk Analysts | Monthly + proposals | Allocations, charters, promotions, retirements, watch-mode governance |
+| Investment committee | CIO | Risk Officer, both Compliance Officers, Treasury, Coach, Desk Designer, Validation Reviewer, desk Analysts | Monthly + proposals | Allocations, charters, promotions, retirements, watch-mode governance; compliance officers can block a charter on record |
+| Compliance self-audit | CIO (principal officer) | Both Compliance Officers, Books & Records, Operations Engineer | Half-yearly | Audit evidence bundle to the Principal |
 | Coaching session | Coach | One desk's roles + Recalibration Agent | Weekly | Playbook and template revisions, lesson adoptions |
 
 ## Interaction matrix
@@ -171,5 +243,11 @@ Composes desk proposals (charter, pipeline configuration, Analyst templates v1, 
 | Coach → all roles | Playbook/template revisions, lesson decisions, evals |
 | Research Lab → Desk Designer → CIO | Evidence → Desk proposal → Charter |
 | CIO → firm | Allocation, charters, watch-mode governance |
+| Senior Analyst → Compliance Officers → Senior Analyst | StrategyBook → ComplianceClearance (per strategy) |
+| Detectors → Regulatory Compliance Officer | Surveillance alerts → dispositions/holds |
+| Broker → Broker Compliance Officer | RMS rejections → holds/catalogue updates |
+| Treasury → desks / Risk Officer | MarginPlan, reduce requests |
+| Books & Records → Compliance / CIO | ReconciliationReport (breaks halt new books), PnLAttribution, TaxLedger |
+| Execution Quality Analyst → Analysts, Coach, Skill Engineer | TCAReport, CostModelCalibration |
 | Ops/Compliance → Principal | Incidents, audits |
 | Everyone → Principal | Journal, digest |

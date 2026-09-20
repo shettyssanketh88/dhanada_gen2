@@ -3,19 +3,19 @@
 | Field | Value |
 |---|---|
 | Spec id | `000-platform` |
-| Status | Draft v2.1 for Principal review (v2.0 + the strategy-book pipeline from `scenario-walkthrough.md`) |
+| Status | Draft v2.2 for Principal review (v2.1 + compliance and control roles: see `compliance.md`) |
 | Date | 2026-09-20 |
 | Governed by | `.specify/memory/constitution.md` v2.0.0 |
 | Inputs | `docs/lessons-from-v1.md`, `docs/research/*`, the Principal's directions of 2026-09-20 (all decisions agent-driven; the scanner → ingestor → analyst → execution → recalibration pipeline; both watch modes evaluated; books per stock per session/week) |
-| Companion documents | `plan.md`, `roles.md`, `memory.md`, `skills.md`, `tools-and-rails.md`, `learning.md`, `operations.md`, `scenario-walkthrough.md`, `tasks.md` |
+| Companion documents | `plan.md`, `roles.md`, `memory.md`, `skills.md`, `tools-and-rails.md`, `learning.md`, `operations.md`, `compliance.md`, `scenario-walkthrough.md`, `tasks.md` |
 
-Requirement ids are `DH2-<AREA>-<nnn>`. Areas: FIRM, PIPE (pipeline and books), EXEC (execution agent and watch), MEM, LRN, RAIL, TOOL, DAT, OPS, CMP, OBS, COST, DEV. EARS phrasing. `[NC]` marks a clarification for the Principal.
+Requirement ids are `DH2-<AREA>-<nnn>`. Areas: FIRM, PIPE (pipeline and books), EXEC (execution agent and watch), MEM, LRN, RAIL, TOOL, DAT, OPS, CMP (compliance), CTL (treasury, books and records, execution quality), OBS, COST, DEV. EARS phrasing. `[NC]` marks a clarification for the Principal.
 
 ---
 
 ## 1. Vision
 
-Dhanada v2 is an **AI-run investment firm** for Indian markets, trading through Zerodha Kite. Agents hold every role that decides. Each desk runs a pipeline: a **Stock Scanner** picks the stocks, a **Data Ingestor** assembles everything known about them, a **Senior Analyst** writes a **strategy book** per stock (several strategies, each with the conditions under which it applies and its buy, stop and sell prices), a **Risk Officer** approves it, an **Execution Agent** watches the tape and applies whichever strategy's conditions are met, and a **Recalibration Agent** revises the strategies as the data comes in. A **Trade Reviewer** scores every agent's contribution after each trade; a **Coach** turns those scores into better playbooks and templates; a **CIO** allocates capital among desks; a **Research Lab** proposes new desks. Code provides instruments, executes orders, keeps memory, scores decisions and enforces the owner's rails.
+Dhanada v2 is an **AI-run investment firm** for Indian markets, trading through Zerodha Kite. Agents hold every role that decides. Each desk runs a pipeline: a **Stock Scanner** picks the stocks, a **Data Ingestor** assembles everything known about them, a **Senior Analyst** writes a **strategy book** per stock (several strategies, each with the conditions under which it applies and its buy, stop and sell prices), a **Risk Officer** approves its economics, a **Regulatory Compliance Officer** and a **Broker Compliance Officer** clear it against SEBI, exchange and Zerodha rules, an **Execution Agent** watches the tape and applies whichever strategy's conditions are met, and a **Recalibration Agent** revises the strategies as the data comes in. A **Trade Reviewer** scores every agent's contribution after each trade; a **Coach** turns those scores into better playbooks and templates; a **CIO** allocates capital among desks and is the accountable principal officer; a **Research Lab** proposes new desks; a **Treasury & Settlement Manager** plans margin and cash; a **Books & Records Agent** reconciles the firm's books against the broker every day; an **Execution Quality Analyst** measures every fill. Code provides instruments, executes orders, keeps memory, scores decisions and enforces the owner's rails.
 
 Every stock a desk works on has a **dossier** that each agent writes into and reads from, so every agent continues its own work on that stock across the day, across days and across restarts.
 
@@ -45,7 +45,9 @@ The Principal writes `rails/ips.yaml` (`[NC-1]`): total and paper capital; max d
                                    Principal (IPS, login, kill L3)
                                                 │
    ┌────────────────────────────────────────────┴───────────────────────────────────────────┐
-   │ LEADERSHIP:  CIO (capital, charters, watch-mode governance) · Risk Officer · Coach       │
+   │ LEADERSHIP:  CIO (principal officer) · Risk Officer · Coach                              │
+   │ COMPLIANCE & CONTROL: Regulatory Compliance Officer · Broker Compliance Officer ·        │
+   │   Treasury & Settlement Manager · Books & Records Agent · Execution Quality Analyst      │
    └───────┬───────────────────────────────────┬────────────────────────────────┬───────────┘
            │                                   │                                │
    ┌───────▼─────────────────────────┐ ┌───────▼──────────────┐ ┌───────────────▼──────────┐
@@ -70,7 +72,7 @@ The Principal writes `rails/ips.yaml` (`[NC-1]`): total and paper capital; max d
 | `scanned` | Stock Scanner | On the watchlist with reasons and priority |
 | `data_ready` | Data Ingestor | Data pack attached; quality flags set |
 | `book_drafted` | Senior Analyst | Strategy book version written |
-| `book_approved` | Risk Officer | Per-strategy approvals; book version governs |
+| `book_approved` | Risk Officer + both Compliance Officers | Per-strategy economic approval and regulatory/broker clearance (with conditions); book version governs only with all three |
 | `watching` | Execution Agent | Watch armed on the governing version; no position |
 | `working` | Execution Agent | An entry order is live |
 | `open` | Execution Agent | Position held; protective orders per the book |
@@ -134,7 +136,27 @@ Side exits: `dropped` (Scanner or Analyst, with reason), `rejected` (Risk Office
 - **DH2-LRN-006** Point-in-time data, delisting-inclusive histories and masked identifiers for LLM-touched historical studies.
 - **DH2-LRN-007** THE SYSTEM SHALL produce a watch-mode evaluation report per desk (fidelity, latency from condition to order, slippage, cost per stock-day, escalation quality, outcome deltas, with n and CIs) for the investment committee's governance decision.
 
-### 7.6 Rails (RAIL), tools (TOOL), data (DAT), operations (OPS), compliance (CMP), observability (OBS), cost (COST), development (DEV)
+### 7.6 Compliance (CMP) — see `compliance.md`
+
+- **DH2-CMP-001** THE SYSTEM SHALL maintain the SEBI/exchange and broker rule catalogue as dated data (`rails/market_rules/`, rows A1–A19 and B1–B10 with sources and effective dates) owned by the two Compliance Officers and changed only by PR.
+- **DH2-CMP-002** WHEN a book version is drafted, THE SYSTEM SHALL run `compliance:preclear` and obtain, per strategy, a `clear | clear_with_conditions | block` decision from each Compliance Officer before the version can govern; conditions SHALL be enforced by the pre-order rail.
+- **DH2-CMP-003** THE SYSTEM SHALL evaluate the compliance rails on every order synchronously (IP, order rate, tag, session, instrument, surveillance status, product, margin, self-match, ban list, expiry exposure, clearance conditions, provenance) and reject with rule ids.
+- **DH2-CMP-004** THE SYSTEM SHALL run intraday surveillance detectors (OTR, cancel/modify ratios, self-match exposure, share of volume, closing-window activity, position limits, RMS rejection bursts) and route alerts to the Regulatory or Broker Compliance Officer for disposition within the catalogue's timelines; an officer's hold SHALL be enforced by rail.
+- **DH2-CMP-005** THE SYSTEM SHALL produce an EOD compliance close (tag completeness, reconciliation, OTR, penalties, delivery obligations, E-4 exposure, disclosures, retention) and weekly and half-yearly self-audits chaired by the CIO, with evidence bundles to the Principal.
+- **DH2-CMP-006** THE SYSTEM SHALL tag every text-derived feature with `source_ref` and `published_at`, allow only exchange-disclosed or verified sources in `applies_when`, and record provenance on every dossier (PIT).
+- **DH2-CMP-007** THE SYSTEM SHALL keep tamper-evident records (orders, fills, decisions, book versions, invocations, rail events, alerts, contract notes, ledgers) for 8 years `[NC-9]`.
+- **DH2-CMP-008** THE SYSTEM SHALL block live trading by rail until the Principal records the broker's written confirmation of the operating model (`broker.terms_confirmed`) `[NC-7]`.
+- **DH2-CMP-009** THE SYSTEM SHALL poll SEBI, NSE, BSE and Zerodha publication feeds daily, diff against the catalogue, and open PRs with effective dates through the officers.
+
+### 7.7 Treasury, books and execution quality (CTL)
+
+- **DH2-CTL-001** THE SYSTEM SHALL let the Treasury & Settlement Manager produce a daily margin and cash plan per desk from broker funds, margins, collateral and approved books, and monitor peak-margin headroom every 5 minutes with reduce requests to desks and alerts to the Principal for funds actions.
+- **DH2-CTL-002** THE SYSTEM SHALL track settlement obligations (T+1 pay-in, short-delivery risk, stock F&O E-4 exposure, quarterly running-account settlement) and surface them to the Analysts' event calendar and the pre-clearance checks.
+- **DH2-CTL-003** THE SYSTEM SHALL reconcile internal positions, holdings, cash, orders and fills against the broker at start of day, at 15:35 and at 16:05, and against contract notes on T+1; an unresolved break SHALL halt new book approvals until the Books & Records Agent disposes it.
+- **DH2-CTL-004** THE SYSTEM SHALL produce daily P&L attribution per desk (alpha, costs, slippage, fees, carry, penalties) and a tax ledger (STT, income classification, turnover with 44AB alarm).
+- **DH2-CTL-005** THE SYSTEM SHALL compute implementation shortfall per fill (vs arrival, vs quote at send, vs VWAP) and let the Execution Quality Analyst calibrate the firm's cost and slippage model, versioned and adopted by PR.
+
+### 7.8 Rails (RAIL), tools (TOOL), data (DAT), operations (OPS), observability (OBS), cost (COST), development (DEV)
 
 Unchanged from v2.0 except:
 
@@ -164,6 +186,12 @@ Unchanged from v2.0 except:
 
 **S10 — Broker timeout does not duplicate; S11 — the Principal's only daily job.** As v2.0.
 
+**S12 — Compliance clears a book.** Given book v1 with an MIS strategy on a stock that entered ASM overnight, When pre-clearance runs, Then the Broker Compliance Officer blocks that strategy with A7/B3, the Analyst re-drafts it as CNC, both officers clear with the condition `100 % margin`, the Risk Officer approves, and the version governs with the condition enforced by rail.
+
+**S13 — A break halts new books.** Given the 07:40 reconciliation finds a position the broker shows and the ledger does not, When desks try to approve books, Then approvals are held with the break id until the Books & Records Agent disposes it, and the Principal sees it in the journal.
+
+**S14 — Treasury prevents a penalty.** Given an expiry week with a stock-futures position entering E-4, When the 08:15 margin plan runs, Then the Treasury Manager requests the desk to reduce or fund, the Analyst's event rules reflect it, and the EOD margin report shows no expected penalty.
+
 ## 9. Glossary
 
 | Term | Meaning |
@@ -175,5 +203,8 @@ Unchanged from v2.0 except:
 | Governing / shadow | The mode placing orders / the mode recording would-be actions |
 | Feature service | Code computing the named features each minute |
 | Escalation | The Execution Agent handing an uncovered situation back to the Analyst |
+| Pre-clearance | The Compliance Officers' per-strategy decision on a book version (`clear`, `clear_with_conditions`, `block`) |
+| Compliance hold | An officer's decision that stops a desk, symbol or order type until disposed; enforced by rail |
+| Clean book | Books & Records' verdict that internal records match the broker |
 | Recalibration | The Recalibration Agent's intraday and nightly revision of strategies and templates |
 | IPS, rail, desk, dossier, playbook, calibration record, counterfactual | As v2.0 |

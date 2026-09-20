@@ -77,11 +77,11 @@ As v2.0 (`engine/sim/`, `engine/accounting/`, `engine/data/`), with: counterfact
 
 ## 8. Firm and desk tools
 
-`firm:*`, `desks:*`, `dossiers:*`, `memory:*`, `ledger:*`, `learning:*`, `ops:*`, `watch:*` — typed, annotated, scoped per role by a per-session capability token, logged to the audit chain. Write tools accept the agent's decision object and reasons; validation is type + rails + consistency only.
+`firm:*`, `desks:*`, `dossiers:*`, `memory:*`, `ledger:*`, `learning:*`, `ops:*`, `watch:*`, `compliance:*` (preclear, decide, hold, dispose), `rules:*` (read, propose), `treasury:*` (read_funds/margins/collateral, plan, request_reduce), `recon:*` (run, read, dispose), `tca:*` (read_fills, report) — typed, annotated, scoped per role by a per-session capability token, logged to the audit chain. Write tools accept the agent's decision object and reasons; validation is type + rails + consistency only.
 
 ## 9. Rails (`rails/RAILS.md`, `rails/ips.yaml`, `rails/market_rules/`)
 
-Unchanged from v2.0: `ips.*` (daily loss, drawdown, single name, sector, products, segments, horizons, prohibited, capital per desk, LLM budget), `sebi.*` (order rate, static IP, session, retention), `broker.*` (token, freeze qty, lot size, conversion window, GTT limits, market protection), `desk.capital`, `kill.L1/L2/L3`. A rail event is recorded on the dossier or shift, sent to the acting role and the Risk Officer, and included in the Coach's review. Rails reject and explain; they never alter a decision silently.
+Unchanged from v2.0: `ips.*` (daily loss, drawdown, single name, sector, products, segments, horizons, prohibited, capital per desk, LLM budget), `sebi.*` (order rate, static IP, session, retention), `broker.*` (token, freeze qty, lot size, conversion window, GTT limits, market protection), `desk.capital`, `kill.L1/L2/L3`, plus (v2.2, `compliance.md`): `compliance.*` (ip, ops, tag, session, instrument, surveillance_status, product, margin, self_match, ban_list, expiry_exposure, clearance_conditions, provenance, hold) evaluated synchronously from the Compliance Officers' rule catalogue A1–A19/B1–B10 and their clearance conditions and holds; `broker.terms_confirmed` (live orders blocked until the Principal records Zerodha's written confirmation, NC-7); `books.clean` (new book approvals held while a reconciliation break is unresolved). A rail event is recorded on the dossier or shift, sent to the acting role and the Risk Officer, and included in the Coach's review. Rails reject and explain; they never alter a decision silently.
 
 ## 10. Kill switch
 

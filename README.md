@@ -22,6 +22,8 @@ specs/000-platform/               The platform-level specification:
     tools-and-rails.md              The code plane: execution service, calculators, sim engine, data, and the owner's rails.
     learning.md                     Decision scoring, coaching, research lab, desk proposals, investment committee.
     operations.md                   Firm hours, cadence, monitoring, incidents, human touchpoints, cost.
+    compliance.md                   SEBI/exchange and Zerodha rule catalogue ownership, pre-clearance, surveillance, audits, retention.
+    scenario-walkthrough.md         One stock, one day through the pipeline; recorded decisions.
     tasks.md                        Ordered, verifiable implementation phases and tasks.
 specs/NNN-<feature>/              One directory per feature, created from tasks.md when implementation starts.
 ```

@@ -52,12 +52,12 @@ dhanada-v2/
   docs/ADR/  docs/research/  docs/lessons-from-v1.md
   rails/            # RAILS.md, ips.yaml, market_rules/ (dated), health.yaml   ← Principal-owned
   agents/<role>/ROLE.md
-  desks/<desk_id>/CHARTER.md, PROPOSAL.md, playbook.md (CIO/Designer/Strategist-owned)
+  desks/<desk_id>/CHARTER.md, PROPOSAL.md, templates/ (Analyst strategy templates), playbook.md
   skills/<name>/…
   memory/roles/  memory/desks/  memory/firm/  memory/ops/   (git-backed projection)
   research/backlog.yaml  research/experiments/<id>/
   journal/
-  engine/           # code plane: exec/ calc/ data/ features/ sim/ accounting/ ledger/ scoring/ dossiers/ memory/ scheduler/ rails/ mcp/ api/ common/
+  engine/           # code plane: exec/ watch/ features/ books/ calc/ data/ sim/ accounting/ ledger/ scoring/ dossiers/ memory/ scheduler/ rails/ mcp/ api/ common/
   runtime/          # agent plane glue: launcher, meetings, hooks, prompt assembly, budgets, evals runner
   contracts/        # Pydantic models + JSON schemas (decision objects)
   tests/{unit,integration,compliance,evals}
@@ -85,13 +85,17 @@ Structural test: nothing under `engine/` imports an LLM client.
 
 | Model | Producer | Key fields |
 |---|---|---|
-| `Idea` | Analyst | symbol, direction_view, horizon, evidence[], confidence, invalidation_hint |
-| `Thesis` | Strategist | idea_refs, direction, horizon, catalyst, invalidation[], conviction_prob, expected_move_frame |
-| `Plan` | Trader | instrument, product, entry{type, price/zone}, stop, target[], qty, timing, order_type, validity, instruments_used[], expected_r, p_success, cost_r, rationale |
-| `RiskReview` | Risk Office | decision, changes?, reasons, expected_effect |
-| `OrderAction` | Trader | place/modify/cancel with parameters |
-| `PositionAction` | Position Manager | action, params, reasoning, expected_effect, subscriptions[] |
-| `TradeReview` | Desk Reviewer | per_role_scores, findings, lesson_proposals[], meeting_items[] |
+| `Watchlist` | Stock Scanner | entries[] {symbol, reasons[], features_used[], horizon_hint, priority, expected_book_quality} |
+| `DataPack` | Data Ingestor | bar refs, depth, volume_profile, fundamentals, announcements(published_at), calendars, context, quality_flags[], excluded_windows[] |
+| `StrategyBook` | Senior Analyst | symbol, period, version, global_rules, strategies[] {id, name, thesis, applies_when, condition_kind, direction, entry, stop, targets[], after_target rules, size, validity, priority, expected_r, p_success, instruments_used[], status} |
+| `RiskReview` | Risk Officer | book_version, per_strategy decisions, changes?, reasons, expected_effect |
+| `WatchEvent` | Rule Watch / feature service | kind (match, order_event, escalation_condition, milestone, digest), strategy_id, features snapshot, book_version |
+| `OrderAction` | Execution Agent | place/modify/cancel/convert with parameters, strategy_id, book_version, reasoning |
+| `Escalation` | Execution Agent | reason, context refs |
+| `RevisionRequest` | Recalibration Agent | symbol, strategy_id, change, rationale, evidence |
+| `RecalibrationReport`, `TemplateRecommendations` | Recalibration Agent | per_strategy_stats, regime_assessment, changes_requested[] |
+| `TradeReview` | Trade Reviewer | per_agent_scores, findings, lesson_proposals[], meeting_items[] |
+| `WatchModeReport` | code | fidelity, latency, slippage, cost, escalation quality, outcome deltas per mode, n, CIs |
 | `CoachingReport`, `PlaybookRevision`, `LessonDecision` | Coach | diffs, rationale, evidence, n |
 | `AllocationDecision`, `CharterDecision` | CIO | per-desk capital and budget, environment, rationale, evidence |
 | `PreRegistration`, `TrialRecord`, `TrialReport`, `DeskProposal`, `ReviewVerdict` | Research Lab | see learning.md |
@@ -106,7 +110,7 @@ Decision objects carry the agent's numbers; validation checks type, rails and co
 | Group | Tables |
 |---|---|
 | Firm | `desks`, `charters`, `allocations`, `accounts`, `desk_metrics_daily`, `firm_metrics_daily` |
-| Dossiers | `dossiers`, `dossier_sections`, `dossier_events`, `dossier_evidence`, `dossier_counterfactuals`, `subscriptions` |
+| Dossiers & books | `dossiers`, `dossier_sections`, `dossier_events`, `dossier_evidence`, `dossier_counterfactuals`, `subscriptions`, `strategy_books` (versioned), `book_reviews`, `revision_requests`, `execution_log` (mode, book_version, strategy_id), `watch_mode_reports` |
 | Orders | `order_intents`, `orders`, `order_events`, `fills`, `positions`, `cash_ledger`, `protective_orders`, `gtt_brackets` |
 | Rails & risk | `rail_events`, `kill_events`, `risk_reviews`, `risk_notices`, `desk_guidance` |
 | Market data | `instruments(as_of)`, `quote_snapshots`, `announcements`, `corporate_actions`, `results_calendar`, `universe_pit`, `delistings`, `holidays`, `market_rules(effective_from)` |
@@ -153,4 +157,5 @@ Export bars and daily bars to Parquet; import v1 trials as `v1_*` experiments; i
 | NC-2 | Firm daily LLM budget | USD 40/day (desks ~USD 20, leadership ~USD 8, lab ~USD 10, rest ~USD 2) |
 | NC-3 | Second Kite app key for a read-only sidecar | Yes if ₹500/month acceptable |
 | NC-4 | Notification channel | Email (existing bot) + Telegram |
-| NC-5 | Initial desks to charter for paper | Positional Momentum Desk, Event/Catalyst Desk, Intraday Breakout Desk (from the seed backlog) |
+| NC-5 | Initial desks to charter for paper | Positional Momentum Desk (weekly books), Event/Catalyst Desk (weekly books), Intraday Breakout Desk (session books) |
+| NC-6 | Agent Watch concurrency at start | 10 stocks per desk in paper (≈ USD 8–15 per desk-day at 1-minute digests), reviewed after the first watch-mode report |

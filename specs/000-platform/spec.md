@@ -3,57 +3,41 @@
 | Field | Value |
 |---|---|
 | Spec id | `000-platform` |
-| Status | Draft v2.0 for Principal review (supersedes v1.0 of the same day) |
+| Status | Draft v2.1 for Principal review (v2.0 + the strategy-book pipeline from `scenario-walkthrough.md`) |
 | Date | 2026-09-20 |
 | Governed by | `.specify/memory/constitution.md` v2.0.0 |
-| Inputs | `docs/lessons-from-v1.md`, `docs/research/*` (4 reports), the Principal's direction of 2026-09-20: all decisions are agent-driven |
-| Companion documents | `plan.md`, `roles.md`, `memory.md`, `skills.md`, `tools-and-rails.md`, `learning.md`, `operations.md`, `tasks.md` |
+| Inputs | `docs/lessons-from-v1.md`, `docs/research/*`, the Principal's directions of 2026-09-20 (all decisions agent-driven; the scanner → ingestor → analyst → execution → recalibration pipeline; both watch modes evaluated; books per stock per session/week) |
+| Companion documents | `plan.md`, `roles.md`, `memory.md`, `skills.md`, `tools-and-rails.md`, `learning.md`, `operations.md`, `scenario-walkthrough.md`, `tasks.md` |
 
-Requirement ids are `DH2-<AREA>-<nnn>`. Areas: FIRM (organisation), DSK (desks and trades), MEM (memory), LRN (learning and research), RAIL (rails), TOOL (tools and execution service), DAT (data), OPS (operations), CMP (compliance), OBS (observability), COST (LLM cost), DEV (development). EARS phrasing. `[NC]` marks a clarification for the Principal.
+Requirement ids are `DH2-<AREA>-<nnn>`. Areas: FIRM, PIPE (pipeline and books), EXEC (execution agent and watch), MEM, LRN, RAIL, TOOL, DAT, OPS, CMP, OBS, COST, DEV. EARS phrasing. `[NC]` marks a clarification for the Principal.
 
 ---
 
 ## 1. Vision
 
-Dhanada v2 is an **AI-run investment firm** for Indian markets, trading through Zerodha Kite. Agents hold every role that decides: they form views, build theses, plan and size trades, manage positions, review each other, allocate capital among desks, research new strategies, coach one another, and run operations. Code provides instruments (calculators, data, backtests), executes repeatable actions (orders, accounting), keeps memory, and enforces the short list of rails the owner wrote in the Investment Policy Statement.
+Dhanada v2 is an **AI-run investment firm** for Indian markets, trading through Zerodha Kite. Agents hold every role that decides. Each desk runs a pipeline: a **Stock Scanner** picks the stocks, a **Data Ingestor** assembles everything known about them, a **Senior Analyst** writes a **strategy book** per stock (several strategies, each with the conditions under which it applies and its buy, stop and sell prices), a **Risk Officer** approves it, an **Execution Agent** watches the tape and applies whichever strategy's conditions are met, and a **Recalibration Agent** revises the strategies as the data comes in. A **Trade Reviewer** scores every agent's contribution after each trade; a **Coach** turns those scores into better playbooks and templates; a **CIO** allocates capital among desks; a **Research Lab** proposes new desks. Code provides instruments, executes orders, keeps memory, scores decisions and enforces the owner's rails.
 
-The firm is organised as **desks**. Each desk is a small team of agents with a mandate (horizon, universe, style), a capital allocation and its own playbook. Desks compete for capital under a **Chief Investment Officer** agent. A **Research Lab** proposes new desks and improvements; a **Coach** measures every agent's decisions and improves their playbooks; a **Risk Office** reviews plans and watches the book. Every trade is a **dossier** that each role writes into and reads from, so that every agent continues its own work on that trade across sessions, days and restarts.
+Every stock a desk works on has a **dossier** that each agent writes into and reads from, so every agent continues its own work on that stock across the day, across days and across restarts.
 
 ## 2. Goals
 
 | # | Goal | Measure |
 |---|---|---|
-| G1 | The firm makes money after realised costs | Firm-level net expectancy > 0 and Deflated Sharpe > 0 on paper across ≥ 3 desks before real capital; then live |
-| G2 | The firm is agentic end to end | No trading, allocation, promotion or exit decision is made by code; each is attributable to a role with reasoning |
-| G3 | The firm learns | Every closed trade reviewed; every agent's calibration tracked; playbooks revised with evidence; measurable improvement in decision scores quarter over quarter |
+| G1 | The firm makes money after realised costs | Firm net expectancy > 0 and Deflated Sharpe > 0 on paper across ≥ 3 desks before real capital; then live |
+| G2 | Agentic end to end | Every trading, book, allocation and promotion decision attributable to a role with reasoning; execution fidelity to books ≥ 99 % |
+| G3 | The firm learns | Every closed trade reviewed; every strategy family calibrated; templates revised with evidence; decision scores improve quarter over quarter |
 | G4 | Breadth | ≥ 3 desks across ≥ 2 horizons on paper within 3 months; ≥ 5 within 12 months of first capital |
 | G5 | Operational autonomy | Only the daily broker login, the IPS and rail changes involve the Principal |
-| G6 | Honest measurement | Calibration, counterfactual baselines and trial counts on every performance claim |
-| G7 | Bounded LLM spend | Firm budget enforced by the runtime and allocated by the CIO among desks |
+| G6 | Honest measurement | Calibration, counterfactuals per book version and per watch mode, trial counts on every claim |
+| G7 | Bounded LLM spend | Firm budget as a rail; allocated by the CIO; both watch modes costed |
 
 ## 3. Non-goals (v2.0)
 
-- Multi-tenant SaaS, mobile apps, public API.
-- Automated broker login (Zerodha terms).
-- Kubernetes (single-VM Docker Compose retained).
-- Any decision rule hard-coded outside the IPS rails.
+Multi-tenant SaaS; mobile; public API; automated broker login; Kubernetes; any decision rule hard-coded outside the IPS rails.
 
-## 4. The Investment Policy Statement (IPS) and rails
+## 4. The IPS and rails
 
-The Principal writes `ips.yaml` (`[NC-1: initial values]`), the only place where the owner's limits live:
-
-| Field | Meaning |
-|---|---|
-| `total_capital_inr`, `paper_capital_inr` | Capital the firm may deploy; paper capital for desks in incubation |
-| `max_daily_loss_pct`, `max_drawdown_pct` | Firm-level rails; breach → firm flat-and-halt |
-| `max_single_name_pct`, `max_sector_pct` | Exposure rails |
-| `permitted_products`, `permitted_segments` | e.g. equity CNC/MIS, index futures; options defined-risk only |
-| `permitted_horizons` | e.g. intraday, swing, positional |
-| `prohibited` | e.g. naked option selling, automated login, sub-5-minute holds |
-| `max_desks_live`, `max_capital_per_desk_pct` | Concentration rails on the firm structure |
-| `llm_budget_usd_per_day` | Firm-wide spend rail |
-
-Rails (`tools-and-rails.md` §8) = IPS limits + regulator/broker mechanics + kill switch. Everything else is an agent decision.
+The Principal writes `rails/ips.yaml` (`[NC-1]`): total and paper capital; max daily loss and drawdown; single-name and sector caps; permitted products, segments and horizons; prohibited activities; max desks live and capital per desk; LLM daily budget. Rails (`tools-and-rails.md` §9) = IPS + regulator/broker mechanics + kill switch. Everything else is an agent decision.
 
 ## 5. The firm
 
@@ -61,159 +45,135 @@ Rails (`tools-and-rails.md` §8) = IPS limits + regulator/broker mechanics + kil
                                    Principal (IPS, login, kill L3)
                                                 │
    ┌────────────────────────────────────────────┴───────────────────────────────────────────┐
-   │ FIRM LEADERSHIP                                                                         │
-   │  CIO ── allocates capital and LLM budget among desks; charters / retires desks          │
-   │  Risk Office ── reviews plans, watches the book, pauses/halts within the IPS            │
-   │  Coach ── scores every agent's decisions, revises playbooks, runs evals                 │
-   └─────────────┬──────────────────────────────┬───────────────────────────┬───────────────┘
-                 │                              │                           │
-   ┌─────────────▼───────────┐   ┌──────────────▼──────────────┐   ┌────────▼──────────────┐
-   │ DESKS (N, chartered)    │   │ RESEARCH LAB                │   │ OPERATIONS            │
-   │  Analysts (tech,        │   │  Quant Researcher           │   │  Operations Engineer  │
-   │   catalyst, flow)       │   │  Data Steward               │   │  Compliance Auditor   │
-   │  Strategist             │   │  Validation Reviewer        │   │  Skill Engineer       │
-   │  Trader                 │   │  Desk Designer              │   │                       │
-   │  Position Manager       │   └─────────────────────────────┘   └───────────────────────┘
-   │  Desk Reviewer          │
-   └─────────────────────────┘
-   ═══════════════════════════ typed tools (MCP) ═══════════════════════════════════════════
-   EXECUTION SERVICE & INSTRUMENTS (code): orders · reconciliation · accounting · market data ·
-   calculators · backtest engine · trial ledger · dossier & memory stores · scheduler · rails
+   │ LEADERSHIP:  CIO (capital, charters, watch-mode governance) · Risk Officer · Coach       │
+   └───────┬───────────────────────────────────┬────────────────────────────────┬───────────┘
+           │                                   │                                │
+   ┌───────▼─────────────────────────┐ ┌───────▼──────────────┐ ┌───────────────▼──────────┐
+   │ DESK (pipeline instance) × N    │ │ RESEARCH LAB         │ │ OPERATIONS               │
+   │  Stock Scanner                  │ │  Quant Researcher    │ │  Operations Engineer     │
+   │  Data Ingestor                  │ │  Validation Reviewer │ │  Compliance Auditor      │
+   │  Senior Analyst ──► Risk Officer│ │  Desk Designer       │ │  Skill Engineer          │
+   │  Execution Agent (Rule Watch /  │ └──────────────────────┘ └──────────────────────────┘
+   │    Agent Watch)                 │
+   │  Recalibration Agent            │
+   │  Trade Reviewer                 │
+   └─────────────────────────────────┘
+   ══════════════════ typed tools (MCP) ══════════════════════════════════════════════════════
+   INSTRUMENTS & EXECUTION SERVICE (code): feature service · rule watch · exec · accounting ·
+   calculators · sim engine · ledger · dossiers & memory · scoring · scheduler · rails
 ```
 
-## 6. The trade dossier state machine (agent-owned)
+## 6. The dossier state machine (one per stock per desk per book period)
 
-| State | Owner (decides the exit) | Meaning |
+| State | Owner | Meaning |
 |---|---|---|
-| `idea` | Analyst | A view with evidence, filed to the desk |
-| `thesis` | Strategist | Idea developed into a thesis: direction, horizon, catalyst, invalidation, conviction |
-| `plan` | Trader | Instrument, entry, stop, target, size, timing, order type, cost per R, expected R and probability (the Trader's forecast, for calibration) |
-| `risk_review` | Risk Office | Approve, modify (with the Trader's agreement), or reject with reasons |
-| `working` | Trader | Orders placed by the execution tool; fills tracked |
-| `open` | Position Manager | Position held; adjustments, scale, carry, exit are its decisions |
-| `closed` | Execution service (facts) → Desk Reviewer | Both legs reconciled; accounting written |
-| `reviewed` | Desk Reviewer + Coach | Per-role scores, lessons proposed |
+| `scanned` | Stock Scanner | On the watchlist with reasons and priority |
+| `data_ready` | Data Ingestor | Data pack attached; quality flags set |
+| `book_drafted` | Senior Analyst | Strategy book version written |
+| `book_approved` | Risk Officer | Per-strategy approvals; book version governs |
+| `watching` | Execution Agent | Watch armed on the governing version; no position |
+| `working` | Execution Agent | An entry order is live |
+| `open` | Execution Agent | Position held; protective orders per the book |
+| `escalated` (transient) | Senior Analyst | The book did not cover the situation; the Analyst decides and issues a new version; the Execution Agent keeps protective orders working meanwhile |
+| `closed` | Execution service (facts) → Trade Reviewer | Both legs reconciled; accounting and counterfactuals written |
+| `reviewed` | Trade Reviewer + Coach | Scores and lessons |
 | `archived` | — | Immutable |
 
-Side exits: `dropped` (any owner, with reason), `rejected` (Risk Office), `expired`, `killed` (rail). Each role writes its own section of the dossier in its state and can be re-invoked on events while it owns the trade.
+Side exits: `dropped` (Scanner or Analyst, with reason), `rejected` (Risk Officer rejects every strategy), `expired` (book period ended without a trade), `killed` (rail). A new book version does not reset the state; it is recorded on the dossier with the time it took effect.
 
 ## 7. Requirements
 
 ### 7.1 Firm (FIRM)
 
-- **DH2-FIRM-001** THE SYSTEM SHALL define every role as a versioned role definition (`agents/<role>/ROLE.md`: mandate, decision rights, model, tools, skills, memory scopes, budget) and SHALL run each role as its own agent session with its own memory.
-- **DH2-FIRM-002** THE SYSTEM SHALL represent desks as chartered entities (`desks/<desk_id>/CHARTER.md` written by the CIO: mandate, universe, horizon, capital, LLM budget, team, playbook reference, review cadence) and SHALL allow the CIO to charter, resize, pause and retire desks through tools.
-- **DH2-FIRM-003** THE SYSTEM SHALL record every decision (trading or organisational) with role, role version, reasoning, instruments used, expected outcome, and correlation ids, so that any decision can be replayed and scored.
-- **DH2-FIRM-004** WHEN a role's structured output fails validation, THE SYSTEM SHALL return the validation errors to the same session for correction up to two times, then record `REVIEW` and notify the Coach; it SHALL NOT substitute a default decision.
-- **DH2-FIRM-005** THE SYSTEM SHALL let roles convene: a desk meeting, a risk conference and an investment committee are multi-agent sessions with an agenda, a chair, recorded positions and a decision, capped in rounds by the chair's role definition.
-- **DH2-FIRM-006** THE SYSTEM SHALL inform the Principal of every organisational decision (charter, allocation, promotion, retirement, playbook change) through the journal and digest, and SHALL require Principal approval only for IPS, rails and constitution changes.
+- **DH2-FIRM-001** THE SYSTEM SHALL define every role as a versioned role definition and run each role as its own agent session with its own memory.
+- **DH2-FIRM-002** THE SYSTEM SHALL represent desks as chartered pipeline instances (`desks/<desk_id>/CHARTER.md`: mandate, universe, horizon, book period, capital, LLM budget, cadences, watch-mode governance, template set) manageable by the CIO through tools.
+- **DH2-FIRM-003** THE SYSTEM SHALL record every decision with role, version, reasoning, instruments used, expected outcome and correlation ids for replay and scoring.
+- **DH2-FIRM-004** WHEN a role's structured output fails validation, THE SYSTEM SHALL return the errors for correction up to twice, then record `REVIEW` and notify the Coach; never a default decision.
+- **DH2-FIRM-005** THE SYSTEM SHALL support meetings (desk meeting, risk conference, investment committee, coaching session) as chaired multi-agent sessions with minutes and recorded positions.
+- **DH2-FIRM-006** THE SYSTEM SHALL inform the Principal of every organisational decision via journal and digest and require approval only for IPS, rails and constitution changes.
 
-### 7.2 Desks and trades (DSK)
+### 7.2 Pipeline and strategy books (PIPE)
 
-- **DH2-DSK-001** THE SYSTEM SHALL implement the dossier state machine in §6 with a single owning role per state, a complete transition log, and per-role sections.
-- **DH2-DSK-002** WHEN a Trader writes a plan, THE SYSTEM SHALL require it to reference the calculator outputs it used (volatility, structure, liquidity, cost, sizing) and to state expected R, probability of success and cost per R; the Trader's numbers are the plan.
-- **DH2-DSK-003** THE SYSTEM SHALL validate a plan only for type, rails (IPS, product, session, exposure, margin, freeze limits) and internal consistency (stop on the correct side, size within the desk's capital); any other objection is the Risk Office's decision.
-- **DH2-DSK-004** WHEN the Risk Office reviews a plan, THE SYSTEM SHALL accept `approve`, `modify` (proposed changes, requiring the Trader's acceptance or a chaired resolution) or `reject`, each with reasons, and SHALL record the review on the dossier.
-- **DH2-DSK-005** WHILE a dossier is `open`, THE SYSTEM SHALL route every relevant event (fill, price milestone the Position Manager subscribed to, catalyst on the symbol, data anomaly, risk notice, session milestone) to the Position Manager, whose decision (hold, adjust stop/target, scale, carry, exit) is executed by tools.
-- **DH2-DSK-006** THE SYSTEM SHALL let the Position Manager subscribe to price and time triggers so that it is invoked when they occur; between invocations the execution service holds the working stop and target orders the Position Manager last set.
-- **DH2-DSK-007** THE SYSTEM SHALL compute counterfactual baselines for every closed trade (no-trade, plan-as-filed with mechanical bracket, un-modified plan where the Risk Office modified it) and attach them to the dossier for the reviewers.
-- **DH2-DSK-008** THE SYSTEM SHALL allow a desk to define and revise its playbook (markdown plus skills) and SHALL version it; every dossier records the playbook version in force.
-- **DH2-DSK-009** THE SYSTEM SHALL provide a paper environment with identical tools where new desks incubate, and SHALL let the CIO move a desk between paper and live within the IPS.
+- **DH2-PIPE-001** THE SYSTEM SHALL let the Stock Scanner set and revise the desk watchlist with reasons, features used, horizon hint and priority, and SHALL open a dossier per watchlist entry per book period.
+- **DH2-PIPE-002** THE SYSTEM SHALL let the Data Ingestor assemble a data pack per stock from the sources it selects, record quality flags and excluded windows, and commission new sources through PRs.
+- **DH2-PIPE-003** THE SYSTEM SHALL represent a strategy book as a versioned artefact per stock per book period (session for intraday desks; week for swing and positional desks) containing global rules (invalidation, event rules, exclusivity, product and carry rules) and strategies, each with: `applies_when` (with `condition_kind: crisp | judgment`), direction, entry (type, price or zone), stop, targets with fractions, post-target rules, size, validity, priority, expected R, probability, instruments used, thesis, status.
+- **DH2-PIPE-004** THE SYSTEM SHALL validate a book only for type, rails, and internal consistency (stop on the correct side, zones ordered, fractions sum to one, validity inside session, size within desk capital); every number is the Senior Analyst's.
+- **DH2-PIPE-005** THE SYSTEM SHALL provide a feature expression language for crisp conditions over named features the feature service computes each minute (trend labels by timeframe, volume ratios paced by session time, levels, ranges, VWAP distance, breadth, time windows, event flags), extensible by the Skill Engineer on request.
+- **DH2-PIPE-006** WHEN the Risk Officer reviews a book version, THE SYSTEM SHALL record per-strategy `approve | modify | reject` with reasons; a modified strategy takes effect only after the Analyst accepts or a chaired resolution; a book with no approved strategy leaves the dossier in `book_drafted`.
+- **DH2-PIPE-007** THE SYSTEM SHALL let the Risk Officer define auto-approval rules for revisions within standing guidance so that intraday revisions are not blocked; auto-approvals are recorded as the Risk Officer's decisions.
+- **DH2-PIPE-008** THE SYSTEM SHALL let the Recalibration Agent request revisions (retire, adjust, add) with evidence, and let the Senior Analyst accept, amend or decline each request with reasons; every revision is a new book version.
+- **DH2-PIPE-009** THE SYSTEM SHALL compute, for every closed trade, counterfactual outcomes under each book version that governed during the trade (what v2 would have done versus v4) and under each watch mode, and attach them to the dossier.
+- **DH2-PIPE-010** THE SYSTEM SHALL maintain strategy-family statistics (expectancy, calibration, cost per R, by regime and desk) with sample sizes for the Recalibration Agent and the Coach.
 
-### 7.3 Memory (MEM)
+### 7.3 Execution agent and watch (EXEC)
 
-- **DH2-MEM-001** THE SYSTEM SHALL give every role its own long-term memory (playbook, lessons, calibration record, notes) and every dossier a section per role; roles read before deciding and write after.
-- **DH2-MEM-002** THE SYSTEM SHALL enforce time-aware retrieval: a decision at time T sees only items with `known_at ≤ T`.
-- **DH2-MEM-003** THE SYSTEM SHALL store lessons with evidence references and a status (`proposed`, `adopted`, `retired`) decided by the Coach, and SHALL include adopted lessons in the owning role's context.
-- **DH2-MEM-004** THE SYSTEM SHALL provide desk memory (shared by the desk team) and firm memory (shared by all), with write rights per role definition.
-- **DH2-MEM-005** THE SYSTEM SHALL version every memory write and support point-in-time reads and replay.
-- **DH2-MEM-006** THE SYSTEM SHALL run a nightly consolidation in which each role curates its own memory (index, decay, merges) with the Coach reviewing changes.
+- **DH2-EXEC-001** THE SYSTEM SHALL implement two watch modes: **Rule Watch** (deterministic evaluator of crisp conditions on every tick, invoking the Execution Agent on match, order event, escalation condition or milestone) and **Agent Watch** (a continuous Execution Agent session per stock or group receiving 1-minute digests and notable tick events, evaluating crisp and judgment conditions, acting through tools).
+- **DH2-EXEC-002** THE SYSTEM SHALL run both modes on every dossier — one governing (places orders) and one in shadow (paper-only, records what it would have done and when) — as configured per desk by the CIO, so that fidelity, latency, slippage, cost and outcome can be compared.
+- **DH2-EXEC-003** THE SYSTEM SHALL let the Execution Agent execute only what the governing book specifies (entries, protective orders, post-target rules, exits, carries) and SHALL escalate to the Senior Analyst any situation the book does not cover; the Execution Agent SHALL NOT invent a level, size or exit.
+- **DH2-EXEC-004** WHILE a dossier is `escalated`, THE SYSTEM SHALL keep the last protective orders working and SHALL apply the Analyst's resolution (a new version) as soon as it is approved or auto-approved.
+- **DH2-EXEC-005** WHEN several strategies' conditions are met, THE SYSTEM SHALL apply the book's priority and exclusivity rules; if they do not resolve the conflict, the Execution Agent escalates.
+- **DH2-EXEC-006** THE SYSTEM SHALL reload a new book version into the watch within 5 seconds of approval and record the version change on the dossier with any protective-order modifications it implies.
+- **DH2-EXEC-007** THE SYSTEM SHALL measure execution fidelity (actions taken versus actions the book specified, with timestamps) and report it per mode, per desk, weekly.
 
-### 7.4 Learning and research (LRN)
+### 7.4 Memory (MEM)
 
-- **DH2-LRN-001** THE SYSTEM SHALL score every decision after the fact: calibration (stated probability vs outcome), process adherence to the role's playbook, and counterfactual comparison; scores are written to the deciding role's calibration record.
-- **DH2-LRN-002** THE SYSTEM SHALL provide the Coach with per-role, per-desk decision statistics with sample sizes and confidence intervals, and SHALL let the Coach revise playbooks, propose skill changes and adjust role prompts through versioned changes with evals.
-- **DH2-LRN-003** THE SYSTEM SHALL let the Research Lab run backtests, replays and factor studies through a sandboxed engine, recording each run in the trial ledger with its pre-registration and the trial count N; the ledger tool SHALL require an experiment id and hypothesis on every run.
-- **DH2-LRN-004** THE SYSTEM SHALL let the Desk Designer propose a desk charter and playbook to the CIO with evidence, and SHALL let the Validation Reviewer attach an adversarial review before the investment committee decides.
-- **DH2-LRN-005** THE SYSTEM SHALL let the Skill Engineer create and modify skills and calculators through PRs that run the skill's evals and the test suite; a second agent reviews; the Principal is informed.
-- **DH2-LRN-006** THE SYSTEM SHALL maintain point-in-time data, delisting-inclusive histories and masked identifiers for any LLM-touched historical study.
+- **DH2-MEM-001** Per-role long-term memory (playbook, templates for the Analyst, lessons, calibration, notes) and per-dossier sections per pipeline role; read before deciding, write after.
+- **DH2-MEM-002** Time-aware retrieval (`known_at ≤ T`).
+- **DH2-MEM-003** Lessons with evidence and status decided by the Coach; adopted lessons in the owning role's context.
+- **DH2-MEM-004** Desk memory (shared by the pipeline team) and firm memory with write rights per role.
+- **DH2-MEM-005** Versioned writes; point-in-time reads; replay.
+- **DH2-MEM-006** Nightly consolidation by each role, reviewed by the Coach.
 
-### 7.5 Rails (RAIL)
+### 7.5 Learning and research (LRN)
 
-- **DH2-RAIL-001** THE SYSTEM SHALL enforce, in code, only: IPS limits, regulator rules (order rate < 10 per second per segment, static IP, product/session rules, retention), broker mechanics, and the kill switch; the rail list is `rails/RAILS.md` and changes only by the Principal.
-- **DH2-RAIL-002** WHEN a rail blocks an action, THE SYSTEM SHALL record the event on the dossier or shift, notify the acting role and the Risk Office, and include it in the Coach's next review.
-- **DH2-RAIL-003** THE SYSTEM SHALL provide kill levels: L1 desk pause (Risk Office, CIO), L2 firm flat-and-halt (Risk Office, IPS breach), L3 gateway disconnect (Principal); all drilled on every release.
+- **DH2-LRN-001** Decision scoring after the fact: calibration (stated p and expected R vs realised), process adherence, counterfactual deltas per book version and watch mode, execution fidelity, timeliness; written to the deciding role's calibration record.
+- **DH2-LRN-002** The Recalibration Agent receives strategy-family statistics intraday and nightly; the Coach receives role statistics weekly; both revise (books, templates, playbooks) through versioned changes with evals.
+- **DH2-LRN-003** Research Lab backtests, replays and factor studies through a sandboxed engine with a trial ledger requiring an experiment id and hypothesis, recording N and k.
+- **DH2-LRN-004** Desk proposals from the Desk Designer with the Validation Reviewer's adversarial verdict before the investment committee.
+- **DH2-LRN-005** Skills, calculators and features evolve through Skill Engineer PRs with evals and agent review; the Principal is informed.
+- **DH2-LRN-006** Point-in-time data, delisting-inclusive histories and masked identifiers for LLM-touched historical studies.
+- **DH2-LRN-007** THE SYSTEM SHALL produce a watch-mode evaluation report per desk (fidelity, latency from condition to order, slippage, cost per stock-day, escalation quality, outcome deltas, with n and CIs) for the investment committee's governance decision.
 
-### 7.6 Tools and execution service (TOOL)
+### 7.6 Rails (RAIL), tools (TOOL), data (DAT), operations (OPS), compliance (CMP), observability (OBS), cost (COST), development (DEV)
 
-- **DH2-TOOL-001** THE SYSTEM SHALL execute orders (place, modify, cancel, brackets, square-off, reconciliation) as deterministic code behind typed tools, with tag-before-call persistence, unknown-state polling, order-book-as-truth reconciliation and an order-rate governor.
-- **DH2-TOOL-002** THE SYSTEM SHALL provide calculators as tools: volatility (ATR, realised vol), structure (swing levels, ranges, VWAP distance), liquidity (spread, depth, turnover class), cost (per product and date, cost per R for a given stop), sizing (risk-based quantity for a stated R), margin, correlation/exposure, and any calculator an agent commissions from the Skill Engineer.
-- **DH2-TOOL-003** THE SYSTEM SHALL provide a backtest and replay engine with first-touch fills, honest limits and realised-cost models, usable by agents on paper and research data and returning the same accounting schema as live.
-- **DH2-TOOL-004** THE SYSTEM SHALL record on every order the reference price and time, bid/ask at decision, fill price and time, and on every trade the costs, slippage, `risk_inr` and `r_multiple`.
-- **DH2-TOOL-005** THE SYSTEM SHALL keep broker credentials in the execution service's secret store; no tool returns them; agent sessions cannot reach broker endpoints directly.
-- **DH2-TOOL-006** WHEN authentication fails or the egress IP mismatches, THE SYSTEM SHALL halt new orders, keep protective orders working, notify the Principal and the Risk Office, and SHALL NOT attempt automated login.
+Unchanged from v2.0 except:
 
-### 7.7 Data (DAT)
+- **DH2-TOOL-007** THE SYSTEM SHALL provide a **feature service** computing the named features of the expression language every minute for all watched stocks, with health tests, and SHALL expose them to both watch modes and to the Analyst's calculators.
+- **DH2-TOOL-008** THE SYSTEM SHALL provide `books:*` tools (draft, revise, review, load, retire, request_revision) and `watch:*` tools (arm, reload, status, shadow_report).
+- **DH2-COST-003** THE SYSTEM SHALL cost Agent Watch per stock-day and enforce a per-desk cap on concurrent Agent Watch sessions set by the CIO within the IPS budget.
 
-- **DH2-DAT-001** THE SYSTEM SHALL ingest Kite ticks in `full` mode with depth, build 1-minute, 15-minute and daily bars, and persist bid/ask at decision times.
-- **DH2-DAT-002** THE SYSTEM SHALL import v1's bar history, maintain daily bars for the research universe, a point-in-time universe table, delisting and corporate-action tables, and the instrument master with lot sizes, freeze quantities, expiries and holidays as dated data.
-- **DH2-DAT-003** THE SYSTEM SHALL ingest NSE announcements, results calendar and corporate actions with `published_at` and expose them to agents with that timestamp.
-- **DH2-DAT-004** THE SYSTEM SHALL test agent-visible features for degeneracy and SHALL tell the agent when a feature is withheld and why.
-- **DH2-DAT-005** THE SYSTEM SHALL store research data as Parquet queried by DuckDB and transactional data in PostgreSQL.
+## 8. Acceptance scenarios
 
-### 7.8 Operations (OPS)
+**S1 — Pipeline end to end (RELIANCE day, `scenario-walkthrough.md` §3).** Scanner → data pack → book v1 → Risk `modify` → v2 approved → watch armed → S1 match at 10:42 → fill and protective orders → invalidation escalation at 11:20 → v3 → recalibration at 12:30 → v4 → T1 → square-off → accounting with counterfactuals per version → review with per-agent scores → nightly template revision. Every step attributable, every section written.
 
-- **DH2-OPS-001** THE SYSTEM SHALL run a durable scheduler that triggers shifts and events, records runs, resumes after crashes, and lets desks set their own meeting and review cadence within firm hours.
-- **DH2-OPS-002** THE SYSTEM SHALL deliver a daily journal and weekly digest to the Principal: desks, decisions of note, decision-quality scores, expectancy and cost per R, drawdown vs IPS, LLM spend, incidents, organisational changes.
-- **DH2-OPS-003** THE SYSTEM SHALL provide an Operations Engineer with runbooks-as-skills, a Compliance Auditor with weekly audits, and deterministic health checks that remediate first and escalate second.
-- **DH2-OPS-004** THE SYSTEM SHALL deploy only CI-built images; no source on the VM; configuration only through the declared environment file.
+**S2 — Both watch modes.** Given a desk where Rule Watch governs and Agent Watch shadows, When S1's crisp condition is met, Then Rule Watch invokes the Execution Agent and an order is placed; Agent Watch records its own would-be action and timestamp; the weekly report shows fidelity, latency and outcome deltas for both.
 
-### 7.9 Compliance (CMP)
+**S3 — Judgment condition.** Given a strategy whose `applies_when` is a judgment condition, When the desk runs Rule Watch as governing, Then that strategy is evaluated by Agent Watch only (Rule Watch marks it `judgment_only`), and the Execution Agent's action is recorded with its reasoning.
 
-- **DH2-CMP-001** THE SYSTEM SHALL keep tamper-evident audit records (orders, fills, decisions, invocations, rail events) for at least five years.
-- **DH2-CMP-002** THE SYSTEM SHALL encode market rules as dated data maintained by the Compliance Auditor via PR.
-- **DH2-CMP-003** THE SYSTEM SHALL reconstruct, for any order, the chain of decisions and reasoning that produced it.
+**S4 — Escalation keeps protection.** Given an open position and an uncovered situation, When the Execution Agent escalates, Then protective orders stay working, the Analyst resolves within its deadline or the last book version continues, and the resolution becomes a new version.
 
-### 7.10 Observability (OBS), cost (COST), development (DEV)
+**S5 — Recalibration is scored.** Given v2 and v4 governed a trade, When it closes, Then the dossier carries outcomes under each version and the Recalibration Agent's calibration record is updated with the delta.
 
-- **DH2-OBS-001** Traces for every shift, session, tool call and order with correlation ids; metrics for feed freshness, reconciliation lag, rail events, order-rate usage, LLM cost by role and desk, decision scores by role, expectancy and cost per R by desk.
-- **DH2-OBS-002** Alerts to the Principal on kill events, token failure, feed stall > 5 minutes, reconciliation mismatch, IPS proximity (80 % of any limit), budget exhaustion.
-- **DH2-COST-001** Per-session budgets, per-desk daily budgets allocated by the CIO within the IPS budget; graceful stop at limits; cost per decision and per trade reported weekly.
-- **DH2-COST-002** Model routing per role as declared in role definitions; stable prompt prefixes cached.
-- **DH2-DEV-001** Feature specs with requirement ids; CI (ruff, mypy --strict, unit ≥ 90 % for execution/accounting/rails, ≥ 85 % elsewhere, integration on PostgreSQL, skill evals, kill drill on releases).
-- **DH2-DEV-002** Pre-tool-use hooks in developer and runtime harnesses deny access to secrets, the production environment file and broker endpoints.
+**S6 — Rail rejection explained.** As v2.0 S4.
 
-## 8. Acceptance scenarios (platform level)
+**S7 — Time-aware memory.** As v2.0 S5.
 
-**S1 — A desk takes a trade end to end, every decision by an agent.** Given the Positional Desk is chartered on paper, When the Technical Analyst files an idea at 09:40, Then the Strategist writes a thesis, the Trader writes a plan citing calculator outputs with expected R and probability, the Risk Office approves, the execution tool places the order with a persisted tag, the Position Manager's stop and target are working, and the dossier shows one owner per state with reasoning at each.
+**S8 — CIO reallocates and sets watch governance.** Minutes record the decision and evidence; tools apply within IPS.
 
-**S2 — The Position Manager decides the exit and is scored.** Given an open dossier, When the price crosses a milestone the Position Manager subscribed to, Then it is invoked, decides (hold/adjust/exit) with reasoning, the tool executes, and after close the dossier carries the mechanical-bracket counterfactual and the Position Manager's calibration record is updated.
+**S9 — Coach revises a template.** An over-optimistic pullback family over ≥ 50 trades → template v(n+1) with an eval case; next day's books use it.
 
-**S3 — The Risk Office modifies a plan.** Given a plan sized beyond the Risk Office's comfort but inside the IPS, When it returns `modify`, Then the Trader accepts or a chaired resolution occurs, both positions are recorded, and the eventual outcome is scored against both versions.
-
-**S4 — A rail fires and is explained.** Given a plan that would breach `max_single_name_pct`, When the Trader submits it, Then the tool rejects with the rail id, the dossier records it, the Risk Office is notified, and the Coach's next review includes it.
-
-**S5 — Time-aware memory.** Given a lesson learned on D+1 from a trade closed on D, When any role decides at D 10:00 in replay, Then the lesson is absent.
-
-**S6 — The CIO reallocates.** Given the monthly investment committee, When desk statistics are presented with sample sizes, Then the CIO's allocation decision with reasoning is recorded, applied by tool within the IPS, and reported to the Principal.
-
-**S7 — The Coach improves a playbook.** Given a Trader whose stated probabilities are systematically overconfident over ≥ 50 trades, When the Coach runs its weekly review, Then it revises the Trader's playbook (versioned), adds an eval case, and the next sessions load the new version.
-
-**S8 — The Skill Engineer ships a calculator.** Given a Trader requests a new liquidity-impact calculator, When the Skill Engineer opens a PR with tests and evals and the Validation Reviewer approves, Then CI merges it and the Trader's next session can call it; the Principal sees it in the digest.
-
-**S9 — Broker timeout does not duplicate.** As in every version: tag persisted before the call; unknown state polled for two minutes; no duplicate.
-
-**S10 — The Principal's only daily job.** Login reminder once; desk `awaiting_login`; arms automatically afterwards.
+**S10 — Broker timeout does not duplicate; S11 — the Principal's only daily job.** As v2.0.
 
 ## 9. Glossary
 
 | Term | Meaning |
 |---|---|
-| IPS | Investment Policy Statement: the Principal's limits and permissions |
-| Rail | A limit enforced by code from the IPS, regulation or broker mechanics |
-| Desk | A chartered team of agents with mandate, capital and playbook |
-| Dossier | The durable per-trade entity with state, per-role sections and evidence |
-| Playbook | A desk's or role's written procedure, versioned, revised by agents |
-| Calibration record | Per-role history of stated expectations vs outcomes |
-| Counterfactual baseline | Code-computed alternative outcome for a trade (no-trade, mechanical bracket, unmodified plan) |
-| R, cost_R, DSR, MTRL, N, k | As in `learning.md` |
+| Strategy book | The Senior Analyst's versioned set of strategies for one stock and one book period |
+| Book period | Session (intraday desks) or week (swing/positional desks) |
+| Crisp / judgment condition | Machine-checkable expression / prose condition needing agent judgment |
+| Rule Watch / Agent Watch | Deterministic evaluator with event invocations / continuous agent session |
+| Governing / shadow | The mode placing orders / the mode recording would-be actions |
+| Feature service | Code computing the named features each minute |
+| Escalation | The Execution Agent handing an uncovered situation back to the Analyst |
+| Recalibration | The Recalibration Agent's intraday and nightly revision of strategies and templates |
+| IPS, rail, desk, dossier, playbook, calibration record, counterfactual | As v2.0 |

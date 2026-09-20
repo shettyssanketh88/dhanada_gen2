@@ -1,125 +1,100 @@
-# Tools, execution service and rails
+# Tools, execution service, watch modes and rails
 
-*Companion to `spec.md` v2.0 (DH2-TOOL-*, DH2-RAIL-*, DH2-DAT-*). This is the code half of the firm: it executes what agents decide, computes what agents ask, keeps the books, and enforces the owner's rails. It decides nothing. Constraints from `docs/research/2026-09-20-kite-sebi-execution-constraints.md`.*
+*Companion to `spec.md` v2.1 (DH2-TOOL-*, DH2-EXEC-*, DH2-RAIL-*, DH2-DAT-*). The code half of the firm: it executes what agents decide, computes what agents ask, evaluates the Analyst's crisp conditions on the tape, keeps the books, and enforces the owner's rails. It decides nothing. Constraints from `docs/research/2026-09-20-kite-sebi-execution-constraints.md`.*
 
 ## 1. Division of labour
 
 | Agents decide | Code does |
 |---|---|
-| What to trade, direction, horizon | Fetch and serve data; build bars and features; test feature health |
-| Entry, stop, target, size, timing, order type | Compute calculator outputs on request; validate types and rails; place, modify, cancel, track and reconcile orders |
-| Adjust, scale, carry, exit | Keep the last stop/target working between agent invocations; fire subscribed triggers |
-| Capital allocation, charters, promotions | Apply allocations; keep accounts and sleeve books; compute statistics |
-| Lessons, playbook changes, skills | Store, version, index, retrieve memory; run evals and tests in CI |
-| Experiment design and interpretation | Run backtests/replays; record trials with N and k |
-| Risk approval, pauses | Enforce IPS/regulatory rails; kill switch mechanics |
+| Which stocks (Scanner); which data (Ingestor) | Fetch, store, serve data; compute features every minute; test feature health |
+| Strategies, conditions, buy/stop/sell prices, sizes, priorities (Analyst) | Validate type, rails and consistency; version and store books |
+| Approve/modify/reject (Risk Officer) | Record; auto-apply the Risk Officer's own auto-approval rules |
+| Which strategy applies now, how to work the order, when to escalate (Execution Agent) | Rule Watch evaluates crisp conditions per tick; place/modify/cancel/track/reconcile orders; keep protective orders working; fire subscriptions |
+| Retire/adjust/add strategies (Recalibration Agent) | Strategy-family statistics; counterfactuals per book version and watch mode |
+| Capital, charters, watch-mode governance (CIO) | Apply allocations; keep accounts; statistics |
+| Lessons, templates, playbooks, skills (Coach, Skill Engineer) | Store, version, index, retrieve memory; run evals and tests |
+| Experiments and their interpretation (Lab) | Run backtests/replays; record trials with N and k |
+| Pauses and halts within the IPS (Risk Officer) | Enforce IPS/regulatory rails; kill switch mechanics |
 
-## 2. Execution service (`engine/exec/`)
+## 2. Feature service (`engine/features/`)
 
-### 2.1 Broker session
-- One Kite Connect app key; one daily token from the Principal's manual login (request token exchanged by the service). Stored in the secret store; no tool returns it.
-- Ticker and REST share the token; no second consumer.
-- `TokenException`/403 → `broker_state = token_invalid`: new orders refused by rail `broker.token`, protective orders remain, Principal and Risk Office notified. No automated login.
+Computes, every minute for every watched stock (and every tick for the few tick-level features), the **named features** of the expression language:
 
-### 2.2 Static IP and rate
-- Egress IP checked at start and hourly; mismatch → `broker_state = ip_mismatch`, rail `sebi.static_ip` blocks new orders.
-- Order-action token bucket: 8/s sustained, burst 8, ceiling 9 per exchange segment (below SEBI's 10); 400/min and 5,000/day secondary counters; 429 = back-pressure, never "not placed".
-
-### 2.3 Order lifecycle
-```
-OrderAction (agent) ─► type + rail validation ─► OrderIntent persisted {client_tag} ─► HTTP ─► ack | unknown
-```
-- `client_tag` (≤ 20 alphanumerics) persisted before the call; idempotency key `(dossier_id, leg, attempt)`; no second attempt while one is `sent`/`unknown`.
-- Unknown (timeout, non-4xx): poll `/orders` by tag every 10 s for ≥ 120 s; adopt if found; else `failed`, agent informed and may act again.
-- Order book is truth; reconcile on postbacks (WebSocket and HTTP, treated as hints), on reconnect, every 60 s in market hours, and at 15:35 IST.
-- MARKET/SL-M always carry `market_protection = -1`; the Trader chooses the order type; the tool applies the mechanics.
-- Slicing above freeze limits automatic (`autoslice`) with legs on the same dossier.
-
-### 2.4 Working protective orders
-- After a fill, the service places the stop and target the Trader's plan specified (or the Position Manager's latest) as broker orders: MIS → SL-L and limit legs with a local OCO watchdog (re-place a missing leg within 5 s); CNC/NRML → two-leg GTT with daily verification and a fallback marketable exit if a triggered GTT order fails.
-- The Position Manager changes them through `exec:modify`; between its invocations the last instructions stand. There is no code-side trailing or time stop; if a Position Manager wants one, it subscribes to triggers and decides at each.
-
-### 2.5 Square-off
-- MIS flatten by the service starts 15:15 IST unless the Position Manager has already exited or converted (carry). Verification at 15:20 and 15:23; escalation to L2 mechanics at 15:23 if MIS quantity remains. The broker's 15:25/15:26 square-off is a backstop only.
-- Product conversion (`exec:convert_product`) is a Position Manager decision executed before 15:00 IST (rail `broker.conversion_window`).
-
-### 2.6 Subscriptions and events
-`subscribe:price(dossier_id, level, side)`, `subscribe:time(dossier_id, at)`; events delivered to the owning role via the scheduler with a per-event deadline. Also delivered without subscription: fill, partial fill, rejection, catalyst tag on the symbol, data anomaly, risk notice, session milestones, rail events.
-
-## 3. Calculators (`engine/calc/`, exposed as `calc:*`)
-
-| Tool | Returns |
+| Family | Examples |
 |---|---|
-| `calc:volatility(symbol, window, interval)` | ATR (daily, 15m, 1m), realised vol, noise band estimates |
-| `calc:structure(symbol, as_of)` | swing highs/lows, day range, opening range, VWAP and distance, gap, multi-day ranges |
-| `calc:liquidity(symbol, as_of)` | spread (bps), depth at 5 levels, 20-day turnover, liquidity class, impact estimate for a notional |
-| `calc:cost(product, notional, stop_pct, as_of)` | statutory round trip, modelled slippage, cost per R for the given stop |
-| `calc:size(risk_inr, entry, stop, product, symbol)` | quantity for a stated R; margin required; freeze-limit slices |
-| `calc:exposure(desk_id?, symbol?, sector?)` | current and pro-forma exposures vs IPS |
-| `calc:correlation(symbols|desks, window)` | correlation matrix |
-| `calc:event_window(symbol, as_of)` | upcoming results/corporate actions/expiry within horizon |
-| `calc:regime_inputs(as_of)` | breadth, dispersion, vol z-scores (the agent labels the regime) |
-| `calc:stats(series)` | expectancy, t, Sharpe, DSR/PSR/MTRL given N and k |
+| Trend | `trend_1m`, `trend_5m`, `trend_15m`, `trend_1d` ∈ {up, down, sideways} by a documented method the Analyst can inspect; `higher_highs_15m`, `lower_lows_15m` |
+| Volume | `volume_ratio_paced` (session-time-paced vs 20-day same-window), `rvol_first_5m`, `volume_profile_poc` |
+| Levels | `close_1m`, `last_price`, `day_high`, `day_low`, `open`, `prev_close`, `opening_range_high/low`, `swing_high_15m`, `swing_low_15m`, `vwap`, `vwap_distance_pct`, `pullback_depth` |
+| Volatility | `atr_1m`, `atr_15m`, `atr_1d`, `noise_band` |
+| Market | `nifty_change_pct`, `nifty_break_day_low`, `breadth_pct`, `dispersion_z`, `vix_change` |
+| Events | `results_within_days`, `expiry_today`, `announcement_flag`, `circuit_proximity_pct` |
+| Time | `time_in(a, b)`, `minutes_since_open`, `minutes_to_close` |
+| Position | `no_position_open(strategy_id)`, `minutes_since_fill(strategy_id)` |
 
-Calculators are pure, tested, versioned; every result carries `calc_version` and inputs so plans can be replayed. Agents may commission new calculators from the Skill Engineer.
+Each feature has a definition file, unit tests, a health test (not constant, not stale, not structurally biased by time of day) and a version. The Skill Engineer adds features the Analyst asks for. The Analyst's calculators use the same service.
 
-## 4. Backtest and replay engine (`engine/sim/`)
+**Expression language**: boolean combinations (`AND`, `OR`, `NOT`), comparisons, arithmetic, `crosses_above(x, level)`, `crosses_below`, `touches(x, level, tolerance)`, `time_in`, and named features. Parsed and type-checked at book validation; evaluated deterministically by Rule Watch.
 
-- One engine for research, replay and paper: bar-driven, first-touch fills, same-bar stop/target tie counted as a loss, honest limits, cost and slippage models from rule tables and live calibration.
-- Agents drive it in two modes: **rule mode** (a playbook expressed as code by the Skill Engineer, for large-sample studies) and **agent mode** (the desk's roles replayed over history with masked identifiers and time-aware memory, for evaluating agentic playbooks on a sampled set of days — cost-bounded).
-- Every run opens a ledger trial (`ledger:open` requires `experiment_id`, `hypothesis`, pre-registration reference) and closes it with results, N and k.
-- Paper environment = the engine driven by live bars, writing to the same accounting tables as live.
+## 3. Watch modes (`engine/watch/` and the Execution Agent's skill)
 
-## 5. Accounting (`engine/accounting/`)
+### 3.1 Rule Watch (deterministic evaluator)
+- Loads the governing book version; compiles each strategy's crisp `applies_when`, validity, priority and exclusivity; subscribes to the stock's feature stream.
+- On every tick/minute: evaluates conditions; on a **match** (with priority/exclusivity resolved), an **order event**, an **escalation condition** (invalidation firing, conflict unresolved, feature withheld, judgment-only strategy pending, position facts inconsistent), or a **milestone** (open, carry window, square-off), it invokes the Execution Agent session with the event and context.
+- Judgment conditions are marked `judgment_only` and handed to Agent Watch (or escalated if Agent Watch is not running for the desk).
+- Reloads a new version within 5 s of approval; diffs protective orders and asks the Execution Agent to apply the diff.
 
-Positions, cash, costs by product and date, slippage against reference prices, `risk_inr`, `r_multiple`, desk daily rollups (equity, return, peak, drawdown), firm rollups, weekly realised cost per R per desk. Counterfactual baselines computed at close: no-trade, plan-as-filed with mechanical bracket, unmodified plan (if the Risk Office modified), and any baseline a desk's playbook registers.
+### 3.2 Agent Watch (continuous session)
+- One long-running Execution Agent session per stock (or per small group the CIO sets), fed 1-minute bar digests (OHLCV, features, position facts) and notable tick events (level touches, volume bursts, order events) by the feature service.
+- The agent evaluates crisp and judgment conditions itself, acts through `exec:*`, records reasoning per action, and manages context with context editing and compaction; its cost per stock-day is recorded.
+- Concurrency cap per desk set by the CIO within the IPS budget (`DH2-COST-003`).
 
-## 6. Market data (`engine/data/`)
+### 3.3 Governing and shadow
+- The CIO sets per desk which mode **governs** (places orders) and which **shadows** (paper-only; records would-be actions with timestamps and would-be fills from the sim engine).
+- Both produce `ExecutionLog` entries; code computes fidelity (actions vs book), latency (condition met → order sent), slippage, cost, and outcome deltas per mode. Reports go to the Recalibration Agent weekly and to the investment committee (`learning.md` §5, ADR-008).
 
-Ticker in `full` mode (≤ 3,000 instruments per connection, 3 connections), ticks outside 09:15–15:30 IST dropped by timestamp, REST quote fallback, bars 1m/15m/1d with real volume, v1 history imported to Parquet, NSE bhavcopy nightly, announcements every 15 minutes in market hours with `published_at`, results calendar and corporate actions daily, point-in-time universe (NSE inclusion/exclusion archives to 2020, niftyindices reports after), delisting table, instrument master 08:30 IST, rule tables with `effective_from`. Feature health tests run in CI and at runtime; a withheld feature is reported to the requesting agent with the reason.
+## 4. Execution service (`engine/exec/`)
 
-## 7. Firm and desk tools (`firm:*`, `desks:*`, `dossiers:*`, `memory:*`, `ledger:*`, `learning:*`, `ops:*`)
+Broker session (one token, manual login, no auto-login), static IP check, order-rate bucket (8/s sustained, ceiling 9), order lifecycle with tag-before-call and unknown-state polling, order book as truth with reconciliation on postbacks/reconnect/60 s/EOD, `market_protection = -1` on any market order, slicing above freeze limits, protective orders (MIS: SL-L + limit legs with OCO watchdog; CNC/NRML: two-leg GTT with daily verification and fallback), square-off from 15:15 IST with verification, product conversion before 15:00 IST, subscriptions and events — all as in v2.0 (`docs/ADR/ADR-005`, research constraints). The Execution Agent is the only agent role with `exec:*` tools; every `exec:*` call carries `book_version` and `strategy_id`.
 
-All typed, annotated (`readOnlyHint`, `destructiveHint`), scoped per role by a per-session capability token, logged to the audit chain. Write tools accept the agent's decision object and reasons; validation is type + rails + consistency only.
+## 5. Calculators (`calc:*`)
 
-## 8. Rails (`rails/RAILS.md`, `rails/ips.yaml`, `rails/market_rules/`)
+Volatility, structure, liquidity, cost (round trip and cost per R for a stop), size (quantity for a stated R, margin, slices), exposure, correlation, event window, regime inputs, stats (expectancy, t, Sharpe, DSR/PSR/MTRL with N and k). Pure, versioned, tested; results carry inputs and `calc_version`.
 
-The complete list of what code enforces. Grows only by the Principal's PR.
+## 6. Books tools (`books:*`)
 
-| Rail id | Source | Check |
+| Tool | Caller | Effect |
 |---|---|---|
-| `ips.max_daily_loss` | IPS | Firm realised + unrealised loss today ≥ limit → L2 flat-and-halt |
-| `ips.max_drawdown` | IPS | Firm drawdown from peak ≥ limit → L2 |
-| `ips.single_name` | IPS | Pro-forma single-name exposure > limit → reject order |
-| `ips.sector` | IPS | Pro-forma sector exposure > limit → reject |
-| `ips.products`, `ips.segments`, `ips.horizons` | IPS | Not permitted → reject |
-| `ips.prohibited` | IPS | Listed activity (e.g., naked option sale) → reject |
-| `ips.capital_per_desk` | IPS | Allocation above cap → reject allocation |
-| `ips.llm_budget` | IPS | Firm daily spend cap → stop non-essential sessions |
-| `sebi.order_rate` | Regulation | Token bucket as §2.2 |
-| `sebi.static_ip` | Regulation | Egress mismatch → no new orders |
-| `sebi.session` | Exchange | Orders only in session; product-specific windows |
-| `sebi.retention` | Regulation | Audit chain retention ≥ 5 years |
-| `broker.token` | Broker | Invalid token → no new orders |
-| `broker.freeze_qty`, `broker.lot_size`, `broker.conversion_window`, `broker.gtt_limits`, `broker.market_protection` | Broker mechanics | Enforced on order construction |
-| `desk.capital` | Charter (CIO) | Plan size within desk capital; desk paused → no new plans |
-| `kill.L1/L2/L3` | Kill switch | As spec DH2-RAIL-003 |
+| `books:draft(symbol, period, book)` | Senior Analyst | Validates (type, rails, consistency, expression parse); stores version n |
+| `books:revise(symbol, changes, rationale)` | Senior Analyst | New version; records which revision requests it answers |
+| `books:review(book_version, per_strategy_decisions)` | Risk Officer | Records review; applies auto-approval rules the Risk Officer defined |
+| `books:load(symbol)` | Execution Agent / watch | Governing version |
+| `books:request_revision(symbol, strategy_id, change, evidence)` | Recalibration Agent | Queues a request to the Analyst |
+| `books:retire(symbol, strategy_id, reason)` | Senior Analyst | Marks retired in a new version |
 
-A rail event is recorded on the dossier or shift, sent to the acting role and the Risk Office, and included in the Coach's review. Rails never modify an agent's decision silently; they reject and explain.
+## 7. Sim/replay engine, accounting, market data
 
-## 9. Kill switch
+As v2.0 (`engine/sim/`, `engine/accounting/`, `engine/data/`), with: counterfactuals per **book version** (each version that governed during a trade is replayed over the trade's bars) and per **watch mode** (shadow actions simulated with first-touch fills); strategy-family statistics aggregated nightly.
 
-L1 desk pause (Risk Office, CIO): no new plans for the desk; positions managed as usual. L2 firm flat-and-halt (Risk Office; IPS rails): cancel entries, exit all positions with marketable limits, no new plans until the Risk Office and Principal clear. L3 gateway disconnect (Principal): cancel, flatten, disconnect, scheduler off. Drill on every release in paper with `try/finally` semantics.
+## 8. Firm and desk tools
 
-## 10. Acceptance scenarios
+`firm:*`, `desks:*`, `dossiers:*`, `memory:*`, `ledger:*`, `learning:*`, `ops:*`, `watch:*` — typed, annotated, scoped per role by a per-session capability token, logged to the audit chain. Write tools accept the agent's decision object and reasons; validation is type + rails + consistency only.
 
-- **T1** Tag persisted before the HTTP call (fault-injection test kills the process between persist and send; recovery poll finds the order).
-- **T2** Timeout then adopt: no duplicate.
-- **T3** Order-rate ceiling: ≤ 9 actions per second reach the broker.
-- **T4** Missing MIS leg re-placed within 5 s.
-- **T5** GTT deleted externally is re-created at the 09:20 check.
-- **T6** IP mismatch blocks new orders, keeps exits, alerts.
+## 9. Rails (`rails/RAILS.md`, `rails/ips.yaml`, `rails/market_rules/`)
+
+Unchanged from v2.0: `ips.*` (daily loss, drawdown, single name, sector, products, segments, horizons, prohibited, capital per desk, LLM budget), `sebi.*` (order rate, static IP, session, retention), `broker.*` (token, freeze qty, lot size, conversion window, GTT limits, market protection), `desk.capital`, `kill.L1/L2/L3`. A rail event is recorded on the dossier or shift, sent to the acting role and the Risk Officer, and included in the Coach's review. Rails reject and explain; they never alter a decision silently.
+
+## 10. Kill switch
+
+L1 desk pause (Risk Officer, CIO); L2 firm flat-and-halt (Risk Officer; IPS rails); L3 gateway disconnect (Principal). Drilled on every release in paper with `try/finally` semantics.
+
+## 11. Acceptance scenarios
+
+- **T1–T6** Execution mechanics as v2.0 (tag-before-call, unknown-then-adopt, rate ceiling, MIS leg re-placement, GTT re-creation, IP mismatch).
 - **T7** Same-bar tie is a loss in the sim engine.
-- **T8** No LLM client importable from `engine/` (structural test).
-- **T9** A Position Manager's last stop stands across a service restart.
-- **T10** A rail rejection carries the rail id, is on the dossier, and reaches the Risk Office.
+- **T8** No LLM client importable from `engine/`.
+- **T9** The last protective orders stand across a service restart and across an `escalated` state.
+- **T10** A rail rejection carries the rail id and reaches the Risk Officer.
+- **T11** Rule Watch reloads a new book version within 5 s and produces the protective-order diff.
+- **T12** A judgment condition under Rule Watch governance is marked `judgment_only` and handed to Agent Watch or escalated.
+- **T13** Shadow mode never places a broker order (structural test on the shadow code path) and records would-be actions with timestamps.
+- **T14** An expression with an unknown feature fails book validation with the feature name.

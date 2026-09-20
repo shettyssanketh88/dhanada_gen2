@@ -32,26 +32,27 @@ Rules: prompts assembled by scripts contain no anchoring numbers from the system
 | Coach | `revising-playbooks` | Versioned playbook diff with rationale and evidence; run evals before publish | `playbook.py diff|publish`, `evals.py run` |
 | Coach | `curating-lessons` | Adopt/retire lessons with evidence; maintain firm lessons index | `lessons.py` |
 
-## 3. Desk roles
+## 3. Pipeline roles (per desk)
 
 | Role | Skill | Purpose | Scripts |
 |---|---|---|---|
-| Analyst (Technical) | `scanning-technicals` | Scan the desk universe with structure/volatility/liquidity calculators; file ideas with evidence | `scan_context.py`, `file_idea.py` |
-| Analyst (Catalyst) | `reading-catalysts` | Tag announcements/results/corporate actions (batch model), assess relevance to the desk, file ideas | `fetch_announcements.py`, `tag_batch.py`, `file_idea.py` |
-| Analyst (Flow) | `reading-flow` | Depth, turnover, relative volume, index/futures context; file ideas | `flow_context.py`, `file_idea.py` |
-| Analyst (all) | `filing-ideas` | Idea schema, evidence standards, withdrawal | `file_idea.py validate` |
-| Strategist | `forming-theses` | Turn ideas into theses with invalidation and conviction; recall similar theses time-aware | `thesis_context.py`, `thesis.py validate` |
-| Strategist | `debating-bull-bear` | Optional two-round bull/bear pass with Analyst sub-sessions; record both | `debate.py` |
-| Strategist | `dropping-theses` | Drop with reasons; memory note | — |
-| Trader | `planning-trades` | Build the plan: call calculators for candidate stops/targets, cost per R, liquidity; choose; state expected R and probability; cite instruments | `plan_context.py`, `plan.py validate` |
-| Trader | `sizing-positions` | Choose R and quantity with `calc:size`, margin, freeze slices, desk guidance | `size_check.py` |
-| Trader | `working-orders` | Place and work orders through `exec:*`; handle partials, chases, drops | `order_action.py validate` |
-| Trader | `responding-to-risk` | Accept/contest Risk Office modifications; request a chaired resolution | — |
-| Position Manager | `managing-positions` | On each event: hold/adjust/scale with reasoning; set subscriptions; keep the dossier current | `position_context.py`, `action.py validate` |
-| Position Manager | `deciding-carries` | Carry window: convert or exit, with expected overnight effect stated | `carry_context.py` |
-| Position Manager | `exiting-positions` | Exit decisions with reasoning; expected vs mechanical bracket noted | — |
-| Desk Reviewer | `reviewing-trades` | Per-role rubric with counterfactuals; lesson proposals | `review_context.py`, `rubric.py validate` |
-| Desk Reviewer | `reviewing-desk-week` | Weekly desk review; meeting items; playbook suggestions | `week_aggregate.py` |
+| Stock Scanner | `scanning-market` | Scan the desk universe with structure/volatility/liquidity/catalyst/flow tools; pick stocks with reasons | `scan_context.py`, `watchlist.py validate|set` |
+| Stock Scanner | `prioritising-watchlist` | Priority and horizon hints; intraday additions/removals | `watchlist.py` |
+| Data Ingestor | `building-data-packs` | Select sources and granularity; assemble the pack; flag quality issues and excluded windows | `datapack.py build|validate`, `dq.py` |
+| Data Ingestor | `checking-data-quality` | Nightly DQ for the research universe; feature health | `dq.py` |
+| Data Ingestor | `commissioning-data-sources` | Propose a new source via PR to the Skill Engineer | `source_request.py` |
+| Senior Analyst | `writing-strategy-books` | Read the pack, templates, calibration, prior books; call calculators; write the book with crisp/judgment conditions, levels, sizes, priorities, rules, expected R and p | `book_context.py`, `book.py validate|draft`, `expr_check.py` |
+| Senior Analyst | `resolving-escalations` | Decide the uncovered situation; issue a new version within deadline | `escalation_context.py`, `book.py revise` |
+| Senior Analyst | `revising-books` | Accept/amend/decline recalibration requests with reasons | `revision.py` |
+| Risk Officer | `reviewing-strategy-books` | Per-strategy approve/modify/reject; cost per R, exposure, correlation, event windows; auto-approval rules | `book_review_context.py`, `review.py validate` |
+| Execution Agent | `watching-and-executing` | On watch events: confirm the match against the book, resolve priority/exclusivity, place/modify orders exactly as specified, record reasoning; Agent Watch mode: evaluate digests and judgment conditions continuously | `event_context.py`, `action.py validate`, `digest_reader.py` |
+| Execution Agent | `working-orders` | Partials, chases within book instructions, cancellations, protective-order diffs on version reload | `order_action.py` |
+| Execution Agent | `escalating-to-analyst` | Recognise uncovered situations; escalate with context; keep protection working | `escalate.py` |
+| Recalibration Agent | `recalibrating-strategies` | Intraday and nightly: strategy-family stats vs expectation; regime assessment; revision requests with evidence | `family_stats.py`, `request.py validate` |
+| Recalibration Agent | `assessing-regime` | Regime assessment from code-computed inputs | `regime_context.py` |
+| Recalibration Agent | `reporting-strategy-families` | Nightly template recommendations to the Coach; watch-mode report reading | `family_report.py`, `watch_report.py` |
+| Trade Reviewer | `reviewing-pipeline-trades` | Per-agent rubric with counterfactuals per version and mode; lesson proposals | `review_context.py`, `rubric.py validate` |
+| Trade Reviewer | `reviewing-desk-week` | Weekly desk review; meeting items | `week_aggregate.py` |
 
 ## 4. Research Lab
 
@@ -97,9 +98,10 @@ Rules: prompts assembled by scripts contain no anchoring numbers from the system
 
 Each skill ships ≥ 3 evals graded on environment state, several from v1 failures:
 
-- `planning-trades`: (a) calculators called and cited, expected R and probability present; (b) plan inside IPS and desk capital; (c) unparseable thesis → `REVIEW`, no order.
-- `reviewing-plans`: (a) exposure over guidance → `modify` with reasons; (b) inside guidance → `approve` within deadline; (c) rail-proximity → notice issued.
-- `managing-positions`: (a) subscribed milestone → decision with reasoning and expected effect; (b) catalyst event → decision recorded; (c) service restart → prior actions in context.
+- `writing-strategy-books`: (a) calculators called and cited; every strategy has crisp or judgment condition, levels, size, priority, expected R and p; (b) book inside IPS and desk capital; expressions parse; (c) unusable data pack → `REVIEW`, no book.
+- `reviewing-strategy-books`: (a) cost per R below floor → `modify` with reasons; (b) inside guidance → `approve` within deadline; (c) auto-approval rule applied and recorded.
+- `watching-and-executing`: (a) match → order exactly per book, reasoning recorded; (b) conflict unresolved by priority → escalate, no order; (c) version reload → protective-order diff applied; (d) Agent Watch digest with a judgment condition → decision with reasoning; (e) shadow mode → no broker order.
+- `recalibrating-strategies`: (a) family failing with n ≥ threshold in its playbook → revision request with evidence; (b) small n → no request, note recorded; (c) regime shift → assessment written.
 - `running-backtests`: (a) no experiment id → refused; (b) crash → trial `failed`; (c) result carries N and k.
 - `running-morning-checklist`: (a) no token → one reminder; (b) IP mismatch → state and alert; (c) all green → no notification.
 

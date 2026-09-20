@@ -29,12 +29,15 @@
 | 1.4 Scheduler + events + meetings orchestration + journal/digest delivery | `016-scheduler-meetings` | DH2-FIRM-005, DH2-OPS-001/002 | O1, O2, O5; a meeting produces minutes with positions |
 | 1.5 Skills framework + shared skills + eval runner in CI | `017-skills-framework` | DH2-DEV-001 | State-graded evals run |
 | 1.6 [P] Operations Engineer + Compliance Auditor roles and skills | `018-operations-roles` | DH2-OPS-003, DH2-CMP-002/003 | O3; weekly audit produced |
-| 1.7 [P] Desk roles: Analysts, Strategist, Trader, Position Manager, Desk Reviewer + skills | `019-desk-roles` | DH2-DSK-002…008 | S1, S2 on paper |
-| 1.8 [P] Risk Office role + skills (plan review, sweeps, guidance, conference, drill) | `020-risk-office` | DH2-DSK-003/004, DH2-RAIL-003 | S3, S4; drill passes |
-| 1.9 Decision scoring service + calibration records | `021-decision-scoring` | DH2-LRN-001 | L1 |
+| 1.7 [P] Feature service + expression language + strategy-book store and validation (`books:*`) | `019-features-and-books` | DH2-PIPE-003/004/005, DH2-TOOL-007/008 | T11, T14; a book validates and versions |
+| 1.7a [P] Rule Watch + shadow recorder + execution log | `019a-rule-watch` | DH2-EXEC-001/002/006 | T11, T13 |
+| 1.7b [P] Pipeline roles: Stock Scanner, Data Ingestor, Senior Analyst, Execution Agent (event mode), Recalibration Agent, Trade Reviewer + skills | `019b-pipeline-roles` | DH2-PIPE-001/002/006/008, DH2-EXEC-003/004/005 | S1, S3, S4, S5 on paper |
+| 1.7c Agent Watch (continuous sessions, digests, concurrency cap, cost recording) | `019c-agent-watch` | DH2-EXEC-001, DH2-COST-003 | S2, S3; cost per stock-day recorded |
+| 1.8 [P] Risk Officer role + skills (book review, auto-approval rules, sweeps, guidance, conference, drill) | `020-risk-office` | DH2-PIPE-006/007, DH2-RAIL-003 | S6; drill passes |
+| 1.9 Decision scoring service + calibration records + counterfactuals per book version and watch mode + watch-mode report | `021-decision-scoring` | DH2-LRN-001/007, DH2-PIPE-009/010, DH2-EXEC-007 | L1; S5; first watch-mode report |
 | 1.10 CIO role (charters, allocations, committee, journal) — first desk chartered on paper: Positional Momentum Desk `[NC-5]` | `022-cio-and-first-desk` | DH2-FIRM-002/006 | Charter applied; desk trades paper end to end |
 
-Exit criterion: one desk trading paper for two weeks with every decision attributable to a role, every trade reviewed and scored, journal and digest delivered, spend within budget.
+Exit criterion: one desk trading paper for two weeks with both watch modes running (one governing, one shadow), every decision attributable to a role, every trade reviewed and scored with counterfactuals per version and mode, journal and digest delivered, spend within budget.
 
 ## Phase 2 — Learning and research loops · ~3 weeks
 

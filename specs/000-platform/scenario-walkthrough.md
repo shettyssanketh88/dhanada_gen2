@@ -124,7 +124,7 @@ Properties the pipeline needs from the book:
 | `learning.md` | Counterfactuals per book version (v2 vs v4) so recalibration is scored; strategy-family calibration tables. |
 | `skills.md` | `scanning-market`, `building-data-packs`, `writing-strategy-books`, `watching-and-executing`, `recalibrating-strategies`, `reviewing-pipeline-trades`. |
 
-## 6. Two design choices to confirm
+## 6. Decisions recorded (Principal, 2026-09-20)
 
-1. **How the Execution Agent watches ticks.** Proposed: a deterministic watch script evaluates the book's conditions on every tick and invokes the agent only on matches, order events, escalations and milestones. The alternative, an LLM session reading ticks continuously, costs roughly two to three orders of magnitude more per stock-day and adds seconds of latency per decision. The proposal keeps the executor "rules only", as specified, while the rules themselves are entirely the Analyst's.
-2. **Granularity of strategy books.** Proposed: one book per stock per session for intraday strategies, and one book per stock per week for swing and positional strategies, both revisable by recalibration. The alternative is one book per strategy family applied across many stocks; it is cheaper but loses the per-stock levels the scenario asks for. Both can coexist later.
+1. **Watch mechanism: both.** Rule Watch (deterministic evaluator, agent invoked on events) and Agent Watch (continuous agent session on 1-minute digests and tick events) are both implemented. Every dossier runs one governing and one shadow; code compares fidelity, latency, slippage, cost, escalation quality and outcomes; the investment committee decides governance per desk on that evidence (ADR-008, `learning.md` §5a). Strategies may carry judgment conditions that only Agent Watch can evaluate.
+2. **Book granularity:** one strategy book per stock per session for intraday desks; one per stock per week for swing and positional desks; both revisable by recalibration (new versions).

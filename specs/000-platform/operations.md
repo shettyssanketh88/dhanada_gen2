@@ -8,21 +8,26 @@
 |---|---|---|---|
 | 07:30 | `ops.morning` | Code checks → Operations Engineer on failure | Token, egress IP, instrument master, rule tables, feeds, DB/disk. No token → one Principal reminder; firm `awaiting_login`; recheck every 10 min to 09:10. |
 | 08:30 | `data.prep` | Code | Announcements, calendars, corporate actions, features, feature health, universe as-of. |
-| 08:45 | `desks.open` | Each active desk (Strategist chairs) | Desk meeting per charter (default daily): brief from Analysts, watchlist, theses to pursue, subscriptions. |
+| 07:45 | `desks.scan` | Stock Scanners | Watchlists with reasons and priority; dossiers opened. |
+| 08:00 | `desks.ingest` | Data Ingestors | Data packs per stock; quality flags. |
+| 08:30 | `desks.books` | Senior Analysts → Risk Officer | Strategy books drafted and reviewed (intraday desks daily; swing/positional desks weekly on Monday with daily check-ins). |
+| 08:45 | `desks.open` | Each desk (Senior Analyst chairs) | Desk meeting per charter: emphasis, escalation policy, template notes. |
 | 09:00 | `firm.open` | CIO shift (short) | Confirms desks armed, allocations and budgets applied, rails status; journal opening note. |
-| 09:15–15:30 | `market.session` | Code + roles on events | Ticks, bars, subscriptions, order tracking, reconciliation every 60 s; Analysts' intraday scans per charter; Traders and Position Managers on events; Risk Office reviews on demand and sweeps every 30 min. |
-| 15:00 | `carry.window` | Position Managers | Carry decisions for MIS positions (convert or plan exit). |
+| 09:15–15:30 | `market.session` | Code + roles on events | Feature service every minute; Rule Watch per tick; Agent Watch sessions per CIO cap; Execution Agents on events; Analysts on escalations (90 s) and revision requests; Scanners' intraday re-scans per charter; Risk Officer reviews (120 s) and sweeps every 30 min. |
+| per charter (default every 60–90 min) | `desks.recalibrate` | Recalibration Agents | Intraday pass: family stats, regime, revision requests. |
+| 15:00 | `carry.window` | Execution Agents per book rules; Analysts on escalation | Carries only as the book specifies; uncovered cases escalate. |
 | 15:15 | `squareoff` | Code | MIS flatten for anything not converted/exited; verification 15:20/15:23. |
 | 15:35 | `eod.reconcile` | Code | Final reconciliation; mismatches → Risk Office + Ops. |
 | 16:00 | `accounting.close` | Code | Fills, costs, R, counterfactuals, desk and firm rollups, decision scores. |
-| 16:30 | `desks.review` | Desk Reviewers | Per-trade reviews for the day's closes. |
+| 16:30 | `desks.review` | Trade Reviewers | Per-agent reviews for the day's closes, with counterfactuals per version and mode. |
 | 17:00 | `firm.journal` | CIO shift | Daily journal to the Principal. |
 | 17:30 | `coach.daily` | Coach | Scores read; `REVIEW` sentinels handled; notes. |
+| 19:00 | `desks.recalibrate.nightly` | Recalibration Agents | Family stats across days and stocks; template recommendations to the Coach; watch-mode report read. |
 | 20:00 | `lab.nightly` | Research Lab | Trials from the backlog; reports; proposals in progress. |
 | 22:30 | `memory.consolidate` | Each role (short) + Coach + code | Curation diffs; adoption decisions; index rebuild; health report. |
 | 23:00 | `data.nightly` | Code | Bhavcopy, backfills, Parquet compaction, encrypted backups. |
 
-Event-driven invocations during the session have deadlines: plan review 120 s; Position Manager event 60 s; Trader order event 30 s. A missed deadline is logged and scored (timeliness), and the last standing instructions remain in force.
+Event-driven invocations during the session have deadlines: book review 120 s; Execution Agent event 30 s; Analyst escalation 90 s; Agent Watch digest handling 20 s. A missed deadline is logged and scored (timeliness), and the last standing instructions remain in force.
 
 ## 2. Weekly and monthly
 

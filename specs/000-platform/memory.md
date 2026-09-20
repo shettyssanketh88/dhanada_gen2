@@ -33,15 +33,17 @@ dossier/<id>/
   facts/
     orders.jsonl        # order intents, acks, fills, reference prices, spreads
     accounting.json     # known_at = closed_at
-    counterfactuals.json# no_trade, mechanical_bracket, unmodified_plan (written at close)
+    counterfactuals.json# no_trade, per_book_version, per_watch_mode(shadow), unmodified_by_risk (written at close)
   sections/
-    analyst_<name>.md   # idea + evidence
-    strategist.md       # thesis, invalidation, conviction
-    trader.md           # plan, instruments used, expected R / p, order working notes
-    risk_office.md      # review, modifications, notices
-    position_manager.md # every action with reasoning; subscriptions
-    desk_reviewer.md    # rubric, findings, lesson proposals
-    coach.md            # scores, coaching notes
+    scanner.md          # why picked, priority, features used
+    data_ingestor.md    # data pack refs, quality flags, excluded windows
+    analyst.md          # each book version: strategies, instruments used, reasoning; escalation resolutions
+    risk_officer.md     # per-version reviews, modifications, notices
+    execution.md        # matches, orders, fills, escalations, mode (governing/shadow), book_version per action
+    recalibration.md    # revision requests with evidence; regime assessment
+    trade_reviewer.md   # per-agent scores, findings, lesson proposals
+    coach.md            # coaching notes
+  books/v<n>.yaml       # every strategy book version that governed, immutable
   evidence/<invocation_id>.json  # prompt/skill versions, model, input refs, output, cost
 ```
 

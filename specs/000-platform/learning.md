@@ -17,7 +17,7 @@ For every decision recorded on a dossier:
 | Score | Definition |
 |---|---|
 | Calibration | Stated probability vs outcome (Brier, reliability by bucket) and expected R vs realised R, per role, desk, regime, horizon, with n and CIs |
-| Counterfactual delta | Realised R minus each baseline: `no_trade` (0), `mechanical_bracket` (plan as filed, stop/target untouched), `unmodified_plan` (where the Risk Office modified), `desk_registered` baselines |
+| Counterfactual delta | Realised R minus each baseline: `no_trade` (0), `per_book_version` (each version that governed, replayed over the trade's bars — scores recalibration and escalation resolutions), `per_watch_mode` (the shadow mode's would-be actions simulated), `unmodified_by_risk` (where the Risk Officer modified), `desk_registered` baselines |
 | Process adherence | Playbook checklist items evidenced in the section (instruments cited, invalidation stated, forecast given) — computed by a deterministic checker plus an LLM-judge pass (Coach) calibrated against the Principal's spot checks |
 | Cost discipline | Plan's stated cost per R vs realised |
 | Timeliness | Response latency to events while owning a state |
@@ -67,6 +67,22 @@ A role or the Coach files a `SkillChangeRequest` (what, why, evidence). The Skil
 ## 7. Masking and leakage discipline
 
 Any LLM-touched historical study masks tickers and shifts dates; all dated data is point-in-time (announcements by `published_at`, fundamentals as filed, universe as of date); the Validation Reviewer's checklist includes a forward-shifted rerun to detect look-ahead; the memory embargo applies in replays.
+
+## 5a. Watch-mode evaluation (ADR-008)
+
+Both watch modes run on every dossier, one governing and one shadow (`spec.md` DH2-EXEC-002). Code computes, per desk and per strategy family, with n and CIs:
+
+| Metric | Definition |
+|---|---|
+| Fidelity | Share of book-specified actions taken correctly (right strategy, right time window, right parameters) |
+| Latency | Seconds from condition satisfied (feature timestamp) to order sent |
+| Slippage | Fill vs reference at condition time, per mode |
+| Cost | LLM cost per stock-day per mode |
+| Escalation quality | Escalations raised vs situations the Trade Reviewer judges should have been escalated (precision/recall) |
+| Judgment coverage | Judgment-condition strategies evaluated (Agent Watch only) and their outcomes |
+| Outcome delta | Realised R (governing) minus simulated R (shadow), and vice versa when governance flips |
+
+The Recalibration Agent reads the report weekly; the Validation Reviewer red-teams it; the investment committee decides governance per desk (Rule Watch, Agent Watch, or a split by `condition_kind`). Governance may be alternated by session in a desk's early weeks so both modes accumulate governing evidence. Every governance decision records the evidence it rested on and is itself scored later.
 
 ## 8. Acceptance scenarios
 

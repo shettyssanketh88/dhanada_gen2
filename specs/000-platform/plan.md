@@ -166,6 +166,6 @@ Export bars and daily bars to Parquet; import v1 trials as `v1_*` experiments; i
 | NC-4 | Notification channel | Email (existing bot) + Telegram |
 | NC-5 | Initial desks to charter for paper | Positional Momentum Desk (weekly books), Event/Catalyst Desk (weekly books), Intraday Breakout Desk (session books) |
 | NC-6 | Agent Watch concurrency at start | 10 stocks per desk in paper (≈ USD 8–15 per desk-day at 1-minute digests), reviewed after the first watch-mode report |
-| NC-7 | Zerodha terms of use on unattended automated trading (B6) | Broker Compliance Officer drafts the query; live blocked by rail `broker.terms_confirmed` until the Principal records written confirmation |
+| NC-7 | Zerodha terms of use on unattended automated trading (B6) | **Resolved 2026-09-21**: written confirmation on file (`rails/broker-confirmation.md`); four constraints are rails; `broker.terms_confirmed = true` |
 | NC-8 | `[verify]` items in the rule catalogue (Feb-2025 circular clauses, freeze quantities, index-futures gross limit, 2026 timing changes) | Regulatory Compliance Officer resolves from primary text before Phase 3 |
 | NC-9 | Retention period | 8 years (Stock Brokers Regulations 2026 standard) |

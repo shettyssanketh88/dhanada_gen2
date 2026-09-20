@@ -61,7 +61,7 @@ Exit criterion: three desks on paper across ≥ 2 horizons; weekly coaching revi
 |---|---|---|---|
 | 3.1 Live Kite execution (place/modify/cancel, MIS and GTT protective orders, square-off, reconciliation, fault-injection suite) | `027-live-execution` | DH2-TOOL-001/005/006 | T1–T6 against a live account with quantity 1 during a supervised session |
 | 3.2 Live hardening: separate DB/accounts, secrets audit, backup/restore drill, static-IP monitoring, Principal 2FA | `028-live-hardening` | DH2-CMP-001, plan.md §8 | Restore drill; secrets scan clean |
-| 3.3 IPS live section and rails verification; kill drill on release; `broker.terms_confirmed` rail and the Zerodha confirmation (NC-7); `[verify]` catalogue items resolved (NC-8) | `029-ips-live` | DH2-RAIL-*, DH2-CMP-008 | O4, C6 |
+| 3.3 IPS live section and rails verification; kill drill on release; broker operating-model rails verified against `rails/broker-confirmation.md` (static IP, market protection, < 10 OPS, daily 2FA login); `[verify]` catalogue items resolved (NC-8) | `029-ips-live` | DH2-RAIL-*, DH2-CMP-008 | O4, C6, C7 |
 
 ## Phase 4 — First capital and firm growth · ongoing
 

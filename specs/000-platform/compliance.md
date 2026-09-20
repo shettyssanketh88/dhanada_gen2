@@ -17,6 +17,7 @@ Real regulated firms split compliance into a **pre-trade function**, a **surveil
 | Weekly and half-yearly self-audit | Both officers, chaired by the CIO as principal officer | Audit-chain verification, rule-version check, evidence bundle |
 | Circular tracking | Both officers | Feed poller; diff against catalogue; PRs with effective dates |
 | Signal provenance (PIT) | Regulatory Compliance Officer | Every feature from text carries `source_ref` and `published_at`; unverified sources are tagged and cannot be used in `applies_when` |
+| Broker operating model | Broker Compliance Officer | `rails/broker-confirmation.md`: static IP, market protection, < 10 OPS, daily 2FA login — confirmed by Zerodha 2026-09-21; re-confirmed annually |
 
 Accountability: the **CIO is the principal officer**; the officers report to the CIO and to the Principal (digest). Independence: the officers never author books or place orders; the Execution Agent cannot bypass a rail; the Risk Officer reviews economics, the officers review legality and broker mechanics — three separate approvals on every book version.
 
@@ -86,7 +87,7 @@ Orders, fills, decisions, book versions, invocations, rail events, alerts and di
 
 | id | Item |
 |---|---|
-| NC-7 | Zerodha's terms state Kite Connect APIs are "not meant for placing fully automated trades (without manual intervention)" without exchange approval (B6). The Broker Compliance Officer's first task is to draft the query to Zerodha; the Principal must obtain written confirmation of the acceptable operating model (daily manual login + ≤ 10 OPS + static IP) before live trading. Until then, live is blocked by rail `broker.terms_confirmed = false`. |
+| NC-7 | **Resolved 2026-09-21.** The Principal holds Zerodha's written confirmation that automated trading via Kite Connect is permitted for an individual without further approval under four constraints: whitelisted static IP for order endpoints, `market_protection` on every MARKET/SL-M order, under 10 orders per second (no algorithm registration needed below it), and daily OAuth login with 2FA/TOTP. The text and the resulting rails are in `rails/broker-confirmation.md`; `broker.terms_confirmed = true`. The older terms-of-use wording (B6) is superseded. |
 | NC-8 | Verify from primary text: the Feb-2025 circular's exact clauses, current freeze quantities, index-futures EOD gross limit, and the reported 2026 NSE timing changes (the catalogue marks them `[verify]`). |
 | NC-9 | Whether to adopt 8-year retention (proposed) or the 5-year minimum. |
 
@@ -97,4 +98,5 @@ Orders, fills, decisions, book versions, invocations, rail events, alerts and di
 - **C3** OTR crosses 40 at 11:00 on one desk; the detector alerts; the Regulatory officer disposes with a hold on the desk's cancel-heavy strategy; the Execution Agent's next cancel is rail-rejected with the hold id.
 - **C4** A new NSE circular changes freeze quantities; the Broker officer's tracker diffs the catalogue, opens a PR with `effective_from`, the Skill Engineer merges after review, and the pre-order rail uses the new value from the effective date.
 - **C5** The EOD close finds an order without a strategy id in its tag; the report flags it, the Execution Agent's fidelity score records it, and the Coach reviews.
-- **C6** Live trading is attempted with `broker.terms_confirmed = false`; the rail blocks and the Principal is notified (NC-7).
+- **C6** The Broker Compliance Officer's annual re-confirmation lapses or Kite Connect terms change; `broker.terms_confirmed` is set false by the officer on record, live orders are blocked, and the Principal is notified until re-confirmed (NC-7 history in `rails/broker-confirmation.md`).
+- **C7** An order constructed as MARKET without `market_protection` is rejected by `broker.market_protection` before any broker call, recorded on the dossier, and the Execution Agent's fidelity score notes it.

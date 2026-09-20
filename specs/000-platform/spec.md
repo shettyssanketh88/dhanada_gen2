@@ -145,7 +145,7 @@ Side exits: `dropped` (Scanner or Analyst, with reason), `rejected` (Risk Office
 - **DH2-CMP-005** THE SYSTEM SHALL produce an EOD compliance close (tag completeness, reconciliation, OTR, penalties, delivery obligations, E-4 exposure, disclosures, retention) and weekly and half-yearly self-audits chaired by the CIO, with evidence bundles to the Principal.
 - **DH2-CMP-006** THE SYSTEM SHALL tag every text-derived feature with `source_ref` and `published_at`, allow only exchange-disclosed or verified sources in `applies_when`, and record provenance on every dossier (PIT).
 - **DH2-CMP-007** THE SYSTEM SHALL keep tamper-evident records (orders, fills, decisions, book versions, invocations, rail events, alerts, contract notes, ledgers) for 8 years `[NC-9]`.
-- **DH2-CMP-008** THE SYSTEM SHALL block live trading by rail until the Principal records the broker's written confirmation of the operating model (`broker.terms_confirmed`) `[NC-7]`.
+- **DH2-CMP-008** THE SYSTEM SHALL enforce the broker's confirmed operating model (`rails/broker-confirmation.md`, 2026-09-21) as rails on every order: whitelisted static IP for order endpoints, `market_protection` on every MARKET and SL-M order, fewer than 10 order actions per second per segment, and a daily manual OAuth login with 2FA/TOTP; and SHALL block live trading if `broker.terms_confirmed` is set false by the Broker Compliance Officer on a change of terms.
 - **DH2-CMP-009** THE SYSTEM SHALL poll SEBI, NSE, BSE and Zerodha publication feeds daily, diff against the catalogue, and open PRs with effective dates through the officers.
 
 ### 7.7 Treasury, books and execution quality (CTL)

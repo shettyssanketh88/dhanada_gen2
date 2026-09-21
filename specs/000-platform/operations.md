@@ -20,8 +20,9 @@
 | per charter (default every 60–90 min) | `desks.recalibrate` | Recalibration Agents | Intraday pass: family stats, regime, revision requests. |
 | every 1–5 min | `compliance.surveil` | Detectors → Compliance Officers on alert | OTR, cancel ratios, self-match, volume share, closing window, position limits, RMS bursts; holds. |
 | every 5 min | `treasury.peak` | Detector → Treasury on breach | Peak-margin headroom incl. MTM; reduce requests. |
-| 15:00 | `carry.window` | Execution Agents per book rules; Analysts on escalation | Carries only as the book specifies; uncovered cases escalate. |
-| 15:15 | `squareoff` | Code | MIS flatten for anything not converted/exited; verification 15:20/15:23. |
+| 14:45 | `carry.window` | Execution Agents per book rules; Analysts on escalation | Carries only as the book specifies; uncovered cases escalate (moved from 15:00: CAS stocks auto-square at 15:12 and enter the closing auction at 15:15). |
+| 15:00 | `squareoff.cas` | Code | MIS flatten for F&O-segment (CAS) stocks not converted/exited; verification 15:05/15:08 (Zerodha auto-squares at 15:12; cash CAS opens 15:15 with no new orders until 15:20). |
+| 15:15 | `squareoff.rest` | Code | MIS flatten for non-CAS stocks and index futures; verification 15:20/15:23 (broker backstops 15:25/15:26). |
 | 15:35 | `eod.reconcile` | Code + Books & Records | Final reconciliation; breaks → Books & Records disposition, Risk Officer, Ops. |
 | 16:00 | `accounting.close` | Code | Fills, costs, R, counterfactuals, desk and firm rollups, decision scores. |
 | 16:05 | `compliance.close` | Both Compliance Officers + Books & Records | EOD compliance close; P&L attribution; tax ledger; expected penalties (with Treasury). |

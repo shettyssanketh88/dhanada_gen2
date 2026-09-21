@@ -70,7 +70,7 @@ Synchronous checks on every `exec:*` write, using the officers' catalogue and th
 | Index-derivative FutEq positions | 5 min | A13 | Regulatory officer |
 | Ban-list and surveillance-list intraday updates | 15 min | A7/A14 feeds | Both officers |
 | RMS rejection bursts | on event | B2–B4 | Broker officer (may hold a desk) |
-| Square-off timers | 1 min | B1 | Execution Agent + rail |
+| Square-off timers (CAS stocks 15:00→15:12; others 15:15→15:25/15:26) | 1 min | B1 (verified 2026-09-21) | Execution Agent + rail |
 | Kill-switch heartbeat and static-IP health | 1 min | A2/B5 | Operations Engineer |
 
 ## 6. EOD, weekly, half-yearly
@@ -88,7 +88,7 @@ Orders, fills, decisions, book versions, invocations, rail events, alerts and di
 | id | Item |
 |---|---|
 | NC-7 | **Resolved 2026-09-21.** The Principal holds Zerodha's written confirmation that automated trading via Kite Connect is permitted for an individual without further approval under four constraints: whitelisted static IP for order endpoints, `market_protection` on every MARKET/SL-M order, under 10 orders per second (no algorithm registration needed below it), and daily OAuth login with 2FA/TOTP. The text and the resulting rails are in `rails/broker-confirmation.md`; `broker.terms_confirmed = true`. The older terms-of-use wording (B6) is superseded. |
-| NC-8 | Verify from primary text: the Feb-2025 circular's exact clauses, current freeze quantities, index-futures EOD gross limit, and the reported 2026 NSE timing changes (the catalogue marks them `[verify]`). |
+| NC-8 | **Resolved 2026-09-21** (`docs/research/2026-09-21-regulatory-verification.md`): 10 OPS is NSE's standard (SEBI delegates); NSE audit trail ≥ 5 years; freeze limits and lots verified; no intraday futures cap, options limits at PAN level; F&O closes 15:40 and cash CAS 15:15–15:35 since 3 Aug 2026 — square-off schedule updated. Secondary-only residue: STT rates, 7-Sep-2026 pre-open detail. |
 | NC-9 | Whether to adopt 8-year retention (proposed) or the 5-year minimum. |
 
 ## 9. Acceptance scenarios

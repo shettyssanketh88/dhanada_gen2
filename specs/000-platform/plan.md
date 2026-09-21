@@ -158,14 +158,16 @@ Export bars and daily bars to Parquet; import v1 trials as `v1_*` experiments; i
 
 ## 12. Open clarifications
 
-| id | Question | Proposed default |
+Researched recommendations for every item are in `docs/decisions/2026-09-21-open-items.md`; the proposed IPS is `rails/ips.yaml` (status `proposed`).
+
+| id | Question | Status / recommendation |
 |---|---|---|
-| NC-1 | Initial IPS values (capital, loss limits, exposure caps, permitted products/horizons, prohibited list, max desks, capital per desk) | Paper ₹50L across desks; live first allocation ≤ ₹1L; max daily loss 2 %, max drawdown 15 %; single name 15 %, sector 30 %; products equity CNC/MIS + index futures; options defined-risk only; prohibited: naked option selling, automated login |
-| NC-2 | Firm daily LLM budget | USD 40/day (desks ~USD 20, leadership ~USD 8, lab ~USD 10, rest ~USD 2) |
-| NC-3 | Second Kite app key for a read-only sidecar | Yes if ₹500/month acceptable |
-| NC-4 | Notification channel | Email (existing bot) + Telegram |
-| NC-5 | Initial desks to charter for paper | Positional Momentum Desk (weekly books), Event/Catalyst Desk (weekly books), Intraday Breakout Desk (session books) |
-| NC-6 | Agent Watch concurrency at start | 10 stocks per desk in paper (≈ USD 8–15 per desk-day at 1-minute digests), reviewed after the first watch-mode report |
-| NC-7 | Zerodha terms of use on unattended automated trading (B6) | **Resolved 2026-09-21**: written confirmation on file (`rails/broker-confirmation.md`); four constraints are rails; `broker.terms_confirmed = true` |
-| NC-8 | `[verify]` items in the rule catalogue (Feb-2025 circular clauses, freeze quantities, index-futures gross limit, 2026 timing changes) | Regulatory Compliance Officer resolves from primary text before Phase 3 |
-| NC-9 | Retention period | 8 years (Stock Brokers Regulations 2026 standard) |
+| NC-1 | IPS values | Proposed in `rails/ips.yaml`; needs the Principal's capital figure and signature |
+| NC-2 | Firm daily LLM budget | USD 15/day paper phase (lean configuration); tension with capital documented |
+| NC-3 | Second Kite key for a read-only sidecar | No for v2.0 |
+| NC-4 | Notification channel | Telegram (alerts/actions) + email (journal, digest, records) |
+| NC-5 | First desks | Positional Momentum, Catalyst Swing, Intraday Breakout (paper-only); futures deferred to ≥ ₹30 lakh |
+| NC-6 | Agent Watch concurrency at start | 3 stocks per desk, 15-minute digests + event bursts, one desk at a time |
+| NC-7 | Zerodha terms | Resolved 2026-09-21 (`rails/broker-confirmation.md`) |
+| NC-8 | `[verify]` catalogue items | Resolved 2026-09-21 (`docs/research/2026-09-21-regulatory-verification.md`); square-off schedule corrected |
+| NC-9 | Retention period | 8 years |

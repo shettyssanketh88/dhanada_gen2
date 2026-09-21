@@ -1,0 +1,63 @@
+# Investment Policy Statement — DRAFT proposed 2026-09-21 from docs/decisions/2026-09-21-open-items.md
+# Status: PROPOSED. Becomes binding when the Principal fills `capital`, sets `status: ratified`, signs below.
+# Every value here is a rail enforced by code (tools-and-rails.md §9). Agents decide everything inside them.
+status: proposed
+version: 0.1
+principal_signature: null          # "<name> <YYYY-MM-DD>" when ratified
+
+capital:
+  total_inr: null                   # PRINCIPAL TO FILL (e.g. 5000000)
+  paper_inr: null                   # PRINCIPAL TO FILL (e.g. 5000000; paper desks incubate here)
+  currency: INR
+
+firm_risk:
+  target_vol_annual_pct: 11
+  max_daily_loss_pct: {soft: 1.25, hard: 2.0}          # vs day-open equity, realised + floating
+  max_drawdown_pct: {half_risk: 5, halt: 10, to_paper: 15}
+  drawdown_restore_steps_pct: [3, 6]
+  portfolio_heat_pct: {firm: 6, per_desk: 3}
+
+desk_risk:
+  drawdown_pct: {half_risk: 6, stop: 10}                # of desk allocation
+  risk_per_trade_pct: {positional: 0.5, catalyst: 0.5, intraday: 0.4, futures: 0.75}
+  incubation_allocation_pct: 10
+  allocation_ladder_pct: [10, 20, 35]                   # advance after >=60 sessions, >=30 trades, DSR>0 (CIO decision)
+  max_capital_per_desk_pct: 40
+  intraday_capital_cap_pct: 15                          # 0 below Rs 25 lakh; 20 at Rs 1 crore after 12 months live
+
+concentration:
+  max_single_name_pct: {at_cost: 7, hard: 10}
+  max_sector_pct: 25
+  liquidity:
+    min_adv_inr: {positional: 50000000, intraday: 250000000}
+    max_order_pct_of_adv: 5
+    max_position_pct_of_adv: 25
+    max_impact_cost_pct: {mid: 0.5, small: 1.0}
+
+permissions:
+  products: [equity_cnc, equity_mis, index_futures_nrml, options_defined_risk_only]
+  segments: [nse_cash, nse_fo_index]
+  horizons: [positional, swing, intraday_paper_only]    # intraday live only after IPS amendment
+  desks_max_live: 3
+  index_futures_enabled: false                          # true when total_inr >= 3000000
+
+prohibited:
+  - naked_or_undefined_risk_option_writing
+  - holds_under_5_minutes
+  - asm_gsm_esm_t2t_or_unsolicited_sms_names
+  - adv_below_min_or_price_below_50
+  - stock_futures_and_options
+  - mis_on_non_approved_scrips
+  - adding_to_losing_positions
+  - orders_without_registered_stop
+  - gross_leverage_over_1x_positional_or_2x_intraday
+  - agent_override_of_any_rail
+  - automated_broker_login
+
+operating_budget:
+  llm_budget_usd_per_day: 15                            # paper phase; CIO allocates across desks
+  agent_watch_max_stocks_per_desk: 3
+  opex_cap_pct_of_capital_per_year: 3
+
+records:
+  retention_years: 8

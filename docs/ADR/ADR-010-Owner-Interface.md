@@ -1,7 +1,7 @@
 # ADR-010 — Owner interface: web console + Telegram interrupts, no TUI
 
 ## Status
-Proposed (2026-09-30), on the Principal's request for a fresh UI.
+Proposed (2026-09-30), on the Principal's request for a fresh UI. Console access over Tailscale confirmed by the Principal on 2026-09-30.
 
 ## Context
 The Principal needs to log in daily, read a journal and digest, approve governance items, pause or kill, and understand why the firm did what it did, from a laptop and a phone. Research (`docs/research/2026-09-30-ui-ux-patterns.md`, `docs/research/2026-09-30-ui-stack-evaluation.md`) shows every 2025–26 supervisor-of-agents product and both mature trading-bot ecosystems converged on a web console as system of record plus a chat channel for interrupts and digests; TUIs are monitor-only, phone-unusable and a second front end.

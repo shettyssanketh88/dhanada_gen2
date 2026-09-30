@@ -104,16 +104,9 @@ Docker Compose on the Mumbai VM; native PostgreSQL; ghcr.io images from CI; two 
 | Model routing | Per role definition | Runtime |
 | Reporting | Cost per decision, per trade, per trial, per desk | Weekly digest |
 
-## 8. Dashboard (v2.0, minimal)
+## 8. Owner interface
 
-- **Firm**: state (armed/awaiting_login/halted), desks with allocation, expectancy R, cost_R, drawdown vs IPS, DSR/MTRL progress, calibration summary per role, open dossiers, spend.
-- **Desk**: watchlist, dossiers by state with the owning role, meeting minutes, playbook version.
-- **Learning**: scores by role, lesson pipeline, playbook revisions, evals.
-- **Research**: backlog, experiments, ledger with N/k, proposals.
-- **Ops/Compliance**: health, incidents, audits, deploys.
-- **Principal**: login status, IPS, rails, kill controls, digest archive.
-
-Win rate is not a headline anywhere.
+Specified in `ui.md` (ADR-010): a responsive web console as the system of record (Today, Inbox, Desk, Dossiers, Books, Agents, Journal & Digest, Governance, Ask, Research Lab, Compliance) plus a Telegram companion with eight verbs for interrupts and digests. The Principal's levers are approve, edit, respond, ignore, pause, kill and ask; there is no manual order entry. Win rate is not a headline anywhere and no rupee P&L appears above the fold on the home screen.
 
 ## 9. Acceptance scenarios
 

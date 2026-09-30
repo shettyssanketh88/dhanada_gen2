@@ -51,7 +51,9 @@ Exit criterion: one desk trading paper for two weeks with both watch modes runni
 | 2.2 Research Lab roles: Quant Researcher, Data Steward, Validation Reviewer, Desk Designer + agentic replay mode | `024-research-lab` | DH2-LRN-003/004/006 | L4; agentic replay report for the first desk |
 | 2.3 Skill Engineer role + PR flow with agent review + CI | `025-skill-engineer` | DH2-LRN-005 | S8, L5 |
 | 2.4 Second and third desks chartered on paper from Lab proposals (Event/Catalyst, Intraday Breakout `[NC-5]`) | — | DH2-FIRM-002 | Committee minutes; desks trading paper |
-| 2.5 Dashboard v0 | `026-dashboard` | DH2-OPS-002 | No win-rate headline |
+| 2.5 Owner console v0 (Today, Inbox, Desk, Dossiers, Books, Agents, Journal, Governance, Compliance, Research), SSE bus, passkeys/TOTP over Tailscale, pnpm lockfile CI, Playwright | `026-owner-console` | DH2-UI-001…007, 010…012 | U1, U2, U4, U6, U7, U8 |
+| 2.5a [P] Telegram companion (8 verbs, notification matrix, signed one-time codes) | `026a-telegram-companion` | DH2-UI-003/004/008 | U1, U3 |
+| 2.5b [P] Ask the firm (read-only tools, citations, widget catalogue, structural test) | `026b-ask-the-firm` | DH2-UI-009 | U5 |
 
 Exit criterion: three desks on paper across ≥ 2 horizons; weekly coaching revisions with evals; monthly committee held with minutes.
 

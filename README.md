@@ -23,6 +23,7 @@ specs/000-platform/               The platform-level specification:
     learning.md                     Decision scoring, coaching, research lab, desk proposals, investment committee.
     operations.md                   Firm hours, cadence, monitoring, incidents, human touchpoints, cost.
     compliance.md                   SEBI/exchange and Zerodha rule catalogue ownership, pre-clearance, surveillance, audits, retention.
+    ui.md                           Owner interface: web console + Telegram companion + Ask the firm; screens, stack, auth (ADR-010).
     scenario-walkthrough.md         One stock, one day through the pipeline; recorded decisions.
     tasks.md                        Ordered, verifiable implementation phases and tasks.
 specs/NNN-<feature>/              One directory per feature, created from tasks.md when implementation starts.

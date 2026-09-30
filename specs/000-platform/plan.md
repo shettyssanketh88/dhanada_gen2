@@ -40,8 +40,8 @@
 | Broker | Kite Connect v3 | tools-and-rails.md |
 | Deployment | Docker Compose, ghcr.io, GitHub Actions | ADR-005 |
 | Observability | OpenTelemetry, Prometheus, JSON logs | — |
-| Notifications | Email + Telegram | — |
-| Dashboard | React + Vite, read-mostly | — |
+| Notifications | Telegram (interrupts, digests, login reminder) + email (journal, digest, records) | ADR-010 |
+| Owner interface | Web console (Vite 8 + React 19 + TS, shadcn, TanStack, lightweight-charts, Recharts, AI SDK + assistant-ui; pnpm frozen lockfile) + Telegram bot (aiogram webhook); SSE from the event bus; passkeys/TOTP over Tailscale; no TUI — see `ui.md` | ADR-010 |
 
 ## 3. Repository layout
 

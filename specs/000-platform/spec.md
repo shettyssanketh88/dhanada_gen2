@@ -7,7 +7,7 @@
 | Date | 2026-09-20 |
 | Governed by | `.specify/memory/constitution.md` v2.0.0 |
 | Inputs | `docs/lessons-from-v1.md`, `docs/research/*`, the Principal's directions of 2026-09-20 (all decisions agent-driven; the scanner → ingestor → analyst → execution → recalibration pipeline; both watch modes evaluated; books per stock per session/week) |
-| Companion documents | `plan.md`, `roles.md`, `memory.md`, `skills.md`, `tools-and-rails.md`, `learning.md`, `operations.md`, `compliance.md`, `scenario-walkthrough.md`, `tasks.md` |
+| Companion documents | `plan.md`, `roles.md`, `memory.md`, `skills.md`, `tools-and-rails.md`, `learning.md`, `operations.md`, `compliance.md`, `ui.md`, `scenario-walkthrough.md`, `tasks.md` |
 
 Requirement ids are `DH2-<AREA>-<nnn>`. Areas: FIRM, PIPE (pipeline and books), EXEC (execution agent and watch), MEM, LRN, RAIL, TOOL, DAT, OPS, CMP (compliance), CTL (treasury, books and records, execution quality), OBS, COST, DEV. EARS phrasing. `[NC]` marks a clarification for the Principal.
 

@@ -41,7 +41,8 @@ The workflow is compatible with GitHub `spec-kit` conventions (`/speckit.constit
 
 ## Ground rules for anyone (human or agent) working here
 
-- The Git object database lives in `~/git-repos/dhanada-v2.git` (this directory holds only a `gitdir:` pointer). Never move it onto OneDrive.
+- Remote: https://github.com/shettyssanketh88/dhanada_gen2.git (`origin`). The Git object database lives in `~/git-repos/dhanada-v2.git` (this directory holds only a `gitdir:` pointer). Never move it onto OneDrive.
+- Capital and go-live: `rails/ips.yaml` (starting live capital ₹1 lakh, `live_enabled: false` until the paper go-live procedure is met and the Principal signs).
 - Work in a scratch clone; sync back; push; let CI verify. Never run suites on the laptop, never put source on the VM.
 - Every PR cites the requirement ids it implements and the gate (if any) it is subject to.
 - Read `docs/lessons-from-v1.md` before proposing anything about intraday trading, agent decisions, or exits.

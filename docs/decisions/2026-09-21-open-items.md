@@ -91,3 +91,12 @@ NSE requires the algo audit trail for at least 5 years; SEBI's Stock Brokers Reg
 ## 8. Verification outcomes (NC-8)
 
 Resolved from primary text (`docs/research/2026-09-21-regulatory-verification.md`). Two consequences already applied to the spec: the MIS square-off schedule (F&O-segment stocks auto-square at 15:12 and enter a closing auction at 15:15, so the firm flattens them by 15:05 and the carry window moved to 14:45), and the corrected attribution of the 10 OPS threshold, weekly IP-change limit and 5-year audit trail to NSE's standards rather than SEBI's circular.
+
+## 9. Principal's decisions of 2026-09-30
+
+- **Starting live capital: ₹1 lakh**, to be increased over time. Encoded in `rails/ips.yaml` v0.2 with `live_enabled: false`.
+- **Paper first.** Two paper accounts: `firm_validation` at ₹25 lakh runs the full multi-desk firm at the scale it should reach (validates liquidity assumptions, costs, compliance flows and both watch modes); `live_mirror` at ₹1 lakh proves that the exact live book size trades sanely (whole shares, minimum R of ₹250 against ₹20–40 round-trip costs, 12–15 positional names of ₹6–8k).
+- **Go-live procedure** (all must hold, evidence bundle from the CIO, Principal signs): ≥ 60 paper sessions, ≥ 30 trades, `live_mirror` DSR > 0 at the ledger's N, 20 consecutive clean reconciliations, kill drill passed on the current release, compliance self-audit passed, execution fidelity ≥ 99 %. First live desk: Positional Momentum, 100 % of the ₹1 lakh.
+- **Growth path.** Percent rails are unchanged as capital grows; desk permissions unlock at thresholds: catalyst swing live at ₹10 lakh, intraday live at ₹25 lakh, index futures at ₹30 lakh. Each capital increase is an IPS amendment (new version, signed).
+- **Economics stated plainly.** At ₹1 lakh, a good year (12 % gross) is ≈ ₹12k before tax and costs, while the lean firm costs ≈ ₹1.5–2.7 lakh per year in LLM spend. The Principal treats the paper and early live phases as R&D on the firm itself, not as an investment return. The budget stays at USD 15/day and is reviewed monthly by the investment committee.
+- **Repository:** https://github.com/shettyssanketh88/dhanada_gen2.git is the remote (`origin`); the local working tree remains `dhanada-v2` on OneDrive with the Git database at `~/git-repos/dhanada-v2.git`.

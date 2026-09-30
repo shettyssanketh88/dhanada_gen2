@@ -1,17 +1,38 @@
-# Investment Policy Statement — DRAFT proposed 2026-09-21 from docs/decisions/2026-09-21-open-items.md
-# Status: PROPOSED. Becomes binding when the Principal fills `capital`, sets `status: ratified`, signs below.
-# Every value here is a rail enforced by code (tools-and-rails.md §9). Agents decide everything inside them.
+# Investment Policy Statement — v0.2, proposed 2026-09-30 from the Principal's decisions of 2026-09-30
+# (starting capital Rs 1 lakh, increased over time; paper trading first) and
+# docs/decisions/2026-09-21-open-items.md. Becomes binding when the Principal sets status: ratified and signs.
+# Every value is a rail enforced by code (tools-and-rails.md §9). Agents decide everything inside them.
+# Percent rails scale automatically as capital grows; desk permissions switch on at the capital thresholds below.
 status: proposed
-version: 0.1
+version: 0.2
 principal_signature: null          # "<name> <YYYY-MM-DD>" when ratified
 
 capital:
-  total_inr: null                   # PRINCIPAL TO FILL (e.g. 5000000)
-  paper_inr: null                   # PRINCIPAL TO FILL (e.g. 5000000; paper desks incubate here)
   currency: INR
+  live_total_inr: 100000            # starting live capital; increases are IPS amendments (new version, Principal-signed)
+  live_enabled: false               # paper first. Set true only via the go-live procedure below.
+  paper_accounts:
+    - {name: firm_validation, inr: 2500000, purpose: "run the full multi-desk firm at the scale it should reach; validates liquidity, costs, compliance and both watch modes"}
+    - {name: live_mirror,      inr: 100000,  purpose: "exact mirror of the live book size; validates that Rs 1 lakh can be traded sanely (whole shares, min R, costs per R)"}
+
+go_live_procedure:                  # the Principal ratifies live_enabled only when all hold (evidence bundle from the CIO)
+  paper_sessions_min: 60
+  paper_trades_min: 30
+  dsr_min: 0.0                      # Deflated Sharpe of the live_mirror book > 0 at the ledger's N
+  reconciliation_clean_consecutive_days_min: 20
+  kill_drill_passed_on_current_release: true
+  compliance_self_audit_passed: true
+  execution_fidelity_min_pct: 99
+  first_live_desk: positional_momentum
+  first_live_allocation_pct_of_live_total: 100   # at Rs 1 lakh the positional desk is the whole live book
+
+capital_thresholds_inr:             # desk permissions unlock as live capital grows (percent rails unchanged)
+  catalyst_swing_live: 1000000
+  intraday_live: 2500000
+  index_futures_live: 3000000       # one NIFTY lot ~= 1R at 0.5% only above this
 
 firm_risk:
-  target_vol_annual_pct: 11
+  target_vol_annual_pct: 10
   max_daily_loss_pct: {soft: 1.25, hard: 2.0}          # vs day-open equity, realised + floating
   max_drawdown_pct: {half_risk: 5, halt: 10, to_paper: 15}
   drawdown_restore_steps_pct: [3, 6]
@@ -20,13 +41,15 @@ firm_risk:
 desk_risk:
   drawdown_pct: {half_risk: 6, stop: 10}                # of desk allocation
   risk_per_trade_pct: {positional: 0.5, catalyst: 0.5, intraday: 0.4, futures: 0.75}
+  min_risk_per_trade_inr: 250                           # below this a plan is uneconomic vs Rs ~20-40 round-trip costs; Analyst must size at or above
   incubation_allocation_pct: 10
   allocation_ladder_pct: [10, 20, 35]                   # advance after >=60 sessions, >=30 trades, DSR>0 (CIO decision)
-  max_capital_per_desk_pct: 40
-  intraday_capital_cap_pct: 15                          # 0 below Rs 25 lakh; 20 at Rs 1 crore after 12 months live
+  max_capital_per_desk_pct: 50                          # 40 at Rs 50 lakh, 35 at Rs 1 crore
+  intraday_capital_cap_pct: 0                           # 15 at Rs 50 lakh, 20 at Rs 1 crore after 12 months live
 
 concentration:
   max_single_name_pct: {at_cost: 7, hard: 10}
+  max_positions_positional: {min: 12, max: 30}          # at Rs 1 lakh: 12-15 names of Rs 6-8k each
   max_sector_pct: 25
   liquidity:
     min_adv_inr: {positional: 50000000, intraday: 250000000}
@@ -37,9 +60,9 @@ concentration:
 permissions:
   products: [equity_cnc, equity_mis, index_futures_nrml, options_defined_risk_only]
   segments: [nse_cash, nse_fo_index]
-  horizons: [positional, swing, intraday_paper_only]    # intraday live only after IPS amendment
-  desks_max_live: 3
-  index_futures_enabled: false                          # true when total_inr >= 3000000
+  horizons_paper: [positional, swing, intraday]
+  horizons_live: [positional]                           # widens at capital_thresholds_inr
+  desks_max_live: 1                                     # 3 at Rs 25 lakh
 
 prohibited:
   - naked_or_undefined_risk_option_writing
@@ -55,9 +78,9 @@ prohibited:
   - automated_broker_login
 
 operating_budget:
-  llm_budget_usd_per_day: 15                            # paper phase; CIO allocates across desks
+  llm_budget_usd_per_day: 15                            # paper phase, treated as R&D; CIO allocates across desks; reviewed monthly
   agent_watch_max_stocks_per_desk: 3
-  opex_cap_pct_of_capital_per_year: 3
+  opex_note: "At Rs 1 lakh live capital the firm's running cost exceeds any plausible trading return; the Principal accepts the paper phase and early live phase as R&D. Revisit when live capital reaches Rs 25 lakh."
 
 records:
   retention_years: 8

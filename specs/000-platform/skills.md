@@ -39,12 +39,12 @@ Rules: prompts assembled by scripts contain no anchoring numbers from the system
 | Stock Scanner | `requesting-screens` | Read the universe screen output; ask the Skill Engineer for a new or modified screen with evidence from scan-quality scores | `screen_output.py`, `screen_request.py` |
 | Stock Scanner | `prioritising-watchlist` | Priority and horizon hints; intraday additions/removals | `watchlist.py` |
 | Data Ingestor | `building-data-packs` | Select sources and granularity; assemble the pack; flag quality issues and excluded windows | `datapack.py build|validate`, `dq.py` |
-| Data Ingestor | `checking-data-quality` | Nightly DQ for the research universe; feature health | `dq.py` |
+| Data Ingestor | `checking-data-quality` | Nightly DQ for the research universe; feature health; withheld-feature notices | `dq.py` |
 | Data Ingestor | `commissioning-data-sources` | Propose a new source via PR to the Skill Engineer | `source_request.py` |
 | Senior Analyst | `writing-strategy-books` | Read the pack, templates, calibration, prior books; call calculators; write the book with crisp/judgment conditions, levels, sizes, priorities, rules, expected R and p | `book_context.py`, `book.py validate|draft`, `expr_check.py` |
 | Senior Analyst | `resolving-escalations` | Decide the uncovered situation; issue a new version within deadline | `escalation_context.py`, `book.py revise` |
 | Senior Analyst | `revising-books` | Accept/amend/decline recalibration requests with reasons | `revision.py` |
-| Risk Officerr | `reviewing-strategy-books` | Per-strategy approve/modify/reject; cost per R, exposure, correlation, event windows; auto-approval rules | `book_review_context.py`, `review.py validate` |
+| Risk Officer | `reviewing-strategy-books` | Per-strategy approve/modify/reject; cost per R, exposure, correlation, event windows; auto-approval rules | `book_review_context.py`, `review.py validate` |
 | Execution Agent | `watching-and-executing` | On watch events: confirm the match against the book, resolve priority/exclusivity, place/modify orders exactly as specified, record reasoning; Agent Watch mode: evaluate digests and judgment conditions continuously | `event_context.py`, `action.py validate`, `digest_reader.py` |
 | Execution Agent | `working-orders` | Partials, chases within book instructions, cancellations, protective-order diffs on version reload | `order_action.py` |
 | Execution Agent | `escalating-to-analyst` | Recognise uncovered situations; escalate with context; keep protection working | `escalate.py` |
@@ -62,9 +62,8 @@ Rules: prompts assembled by scripts contain no anchoring numbers from the system
 | Quant Researcher | `preregistering-experiments` | Commit registration before running | `prereg.py validate|commit` |
 | Quant Researcher | `running-backtests` | Rule studies and agentic replays through the engine; ledger open/complete | `backtest.py`, `replay_agentic.py`, `ledger.py` |
 | Quant Researcher | `reporting-trials` | DSR/PSR/MTRL, N, k, zero-alpha percentile, stability | `stats.py`, `calibrate_zero_alpha.py`, `report.py` |
-| Data Steward | `curating-universe` | Point-in-time universe, delistings, snapshots | `universe.py`, `snapshot.py` |
-| Data Steward | `defining-features` | Feature definitions and health thresholds | `feature.py define|test` |
-| Data Steward | `checking-data-quality` | Nightly DQ; withheld-feature notices | `dq.py` |
+| Data Ingestor (research universe) | `curating-universe` | Point-in-time universe, delistings, snapshots | `universe.py`, `snapshot.py` |
+| Data Ingestor (research universe) | `defining-features` | Feature definitions and health thresholds | `feature.py define|test` |
 | Validation Reviewer | `reviewing-proposals` | Adversarial checklist on desk proposals, playbook revisions, lesson adoptions | `checks.py`, `lookahead_shift.py`, `attribution.py` |
 | Validation Reviewer | `auditing-ledger` | Weekly ledger audit | `ledger_audit.py` |
 | Desk Designer | `designing-desks` | Compose a proposal with charter, team, playbook v1, self-declared success criteria | `proposal.py validate` |

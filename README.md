@@ -23,7 +23,7 @@ docs/ADR/                         Architecture decision records (numbered, immut
 specs/000-platform/               The platform-level specification:
     spec.md                         WHAT and WHY: vision, roles, workflows, requirements (DH2-* ids), acceptance scenarios.
     plan.md                         HOW: architecture, runtime, contracts, data model, security, deployment.
-    roles.md                        The firm: CIO, Risk Office, Coach, desks (Analysts, Strategist, Trader, Position Manager, Reviewer), Research Lab, Operations.
+    roles.md                        The firm: desk pipeline (Stock Scanner, Data Ingestor, Senior Analyst, Risk Officer, Execution Agent, Recalibration Agent, Trade Reviewer), CIO, Coach, Research Lab, Operations, Compliance and control.
     memory.md                       Memory: per-trade per-role dossiers, role/desk/firm memory, time-aware retrieval, consolidation.
     skills.md                       Skill catalogue: every role's procedures, scripts, evals.
     tools-and-rails.md              The code plane: execution service, calculators, sim engine, data, and the owner's rails.

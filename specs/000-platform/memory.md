@@ -20,7 +20,7 @@
 | Role memory | semantic + procedural | the role | the role, Coach, Validation Reviewer | the role; Coach (lesson status, playbook revisions) | git-backed markdown `memory/roles/<role>/` + PostgreSQL mirror |
 | Desk memory | semantic + episodic | the desk | desk team, CIO, Coach | desk roles per charter; Senior Analyst curates | `memory/desks/<desk_id>/` |
 | Firm memory | semantic | CIO | all | CIO, Risk Officer (risk section), Coach (lessons index), Compliance (rules pointers) | `memory/firm/` |
-| Research memory | episodic + semantic | Research Lab | Lab, CIO, Coach | Researcher, Reviewer, Data Steward | trial ledger + `research/experiments/` |
+| Research memory | episodic + semantic | Research Lab | Lab, CIO, Coach | Researcher, Reviewer, Data Ingestor | trial ledger + `research/experiments/` |
 | Ops memory | episodic + procedural | Operations | Ops, Compliance, Coach | Ops | `memory/ops/` |
 | Journal | episodic firm-level | CIO's journal shift | Principal, all | CIO shift | `journal/` |
 

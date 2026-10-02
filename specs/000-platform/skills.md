@@ -22,11 +22,10 @@ Rules: prompts assembled by scripts contain no anchoring numbers from the system
 | CIO | `chartering-desks` | Write/resize/pause/retire a charter from a proposal and committee minutes | `charter.py validate|apply` |
 | CIO | `chairing-investment-committee` | Run the meeting: agenda, positions, rounds cap, minutes, decisions | `minutes.py` |
 | CIO | `writing-firm-strategy` | Maintain `memory/firm/strategy.md` and the digest's strategy section | — |
-| Risk Office | `reviewing-plans` | Assess a plan: exposure, correlation, liquidity, cost per R, Trader calibration, event window; decide approve/modify/reject with expected effect | `plan_context.py`, `review.py validate` |
-| Risk Office | `supervising-book` | 30-minute sweep: book, rails proximity, reconciliation, notices | `book_snapshot.py`, `notice.py` |
-| Risk Office | `setting-desk-guidance` | Standing guidance per desk (recommended risk per trade, concurrency, correlation limits) | `guidance.py` |
-| Risk Office | `running-risk-conference` | Convene affected roles; decide pauses/guidance changes; minutes | `minutes.py` |
-| Risk Office | `drilling-kill-switch` | Release drill in paper; `disable-model-invocation: true` outside CI/Principal | `drill.py` |
+| Risk Officer | `supervising-book` | 30-minute sweep: book, rails proximity, reconciliation, notices | `book_snapshot.py`, `notice.py` |
+| Risk Officer | `setting-desk-guidance` | Standing guidance per desk (recommended risk per trade, concurrency, correlation limits) | `guidance.py` |
+| Risk Officer | `running-risk-conference` | Convene affected roles; decide pauses/guidance changes; minutes | `minutes.py` |
+| Risk Officer | `drilling-kill-switch` | Release drill in paper; `disable-model-invocation: true` outside CI/Principal | `drill.py` |
 | Coach | `scoring-decisions` | Read scores; LLM-judge process adherence calibrated against spot checks; write coaching notes | `scores.py`, `judge.py` |
 | Coach | `coaching-roles` | Weekly per-desk session: findings, playbook revisions, eval cases, change requests | `coaching_report.py` |
 | Coach | `revising-playbooks` | Versioned playbook diff with rationale and evidence; run evals before publish | `playbook.py diff|publish`, `evals.py run` |
@@ -45,7 +44,7 @@ Rules: prompts assembled by scripts contain no anchoring numbers from the system
 | Senior Analyst | `writing-strategy-books` | Read the pack, templates, calibration, prior books; call calculators; write the book with crisp/judgment conditions, levels, sizes, priorities, rules, expected R and p | `book_context.py`, `book.py validate|draft`, `expr_check.py` |
 | Senior Analyst | `resolving-escalations` | Decide the uncovered situation; issue a new version within deadline | `escalation_context.py`, `book.py revise` |
 | Senior Analyst | `revising-books` | Accept/amend/decline recalibration requests with reasons | `revision.py` |
-| Risk Officer | `reviewing-strategy-books` | Per-strategy approve/modify/reject; cost per R, exposure, correlation, event windows; auto-approval rules | `book_review_context.py`, `review.py validate` |
+| Risk Officerr | `reviewing-strategy-books` | Per-strategy approve/modify/reject; cost per R, exposure, correlation, event windows; auto-approval rules | `book_review_context.py`, `review.py validate` |
 | Execution Agent | `watching-and-executing` | On watch events: confirm the match against the book, resolve priority/exclusivity, place/modify orders exactly as specified, record reasoning; Agent Watch mode: evaluate digests and judgment conditions continuously | `event_context.py`, `action.py validate`, `digest_reader.py` |
 | Execution Agent | `working-orders` | Partials, chases within book instructions, cancellations, protective-order diffs on version reload | `order_action.py` |
 | Execution Agent | `escalating-to-analyst` | Recognise uncovered situations; escalate with context; keep protection working | `escalate.py` |
@@ -95,7 +94,7 @@ Rules: prompts assembled by scripts contain no anchoring numbers from the system
 | Regulatory Compliance Officer | `auditing-compliance` | Weekly and half-yearly self-audit; evidence bundle | `audit_chain_verify.py`, `rules_check.py`, `evidence_bundle.py` |
 | Regulatory Compliance Officer | `tracking-circulars` | Poll SEBI/NSE/BSE; diff catalogue; PR with effective dates | `circulars.py`, `rules_pr.py` |
 | Regulatory Compliance Officer | `classifying-tax-ledger` | Income classification rules, STT rates, turnover method | `tax_rules.py` |
-| Both officers | `maintaining-rule-catalogue` | Catalogue schema, sources, effective dates, `[verify]` resolution | `catalogue.py validate|diff` |
+| Both officers | `maintaining-rule-catalogue` | Catalogue schema, sources, effective dates, verification-status resolution | `catalogue.py validate|diff` |
 | Broker Compliance Officer | `preclearing-books-broker` | Per-strategy decision on B1–B10 grounds (products, RMS, API, terms) | `preclear_context.py`, `decision.py validate` |
 | Broker Compliance Officer | `handling-rms-rejections` | Classify rejection bursts; hold; catalogue update | `rejections.py` |
 | Broker Compliance Officer | `refreshing-broker-feeds` | MIS list, haircuts, freeze quantities, timings, lot sizes weekly | `feeds.py refresh` |

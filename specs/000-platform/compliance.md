@@ -19,7 +19,7 @@ Real regulated firms split compliance into a **pre-trade function**, a **surveil
 | Signal provenance (PIT) | Regulatory Compliance Officer | Every feature from text carries `source_ref` and `published_at`; unverified sources are tagged and cannot be used in `applies_when` |
 | Broker operating model | Broker Compliance Officer | `rails/broker-confirmation.md`: static IP, market protection, < 10 OPS, daily 2FA login — confirmed by Zerodha 2026-09-21; re-confirmed annually |
 
-Accountability: the **CIO is the principal officer**; the officers report to the CIO and to the Principal (digest). Independence: the officers never author books or place orders; the Execution Agent cannot bypass a rail; the Risk Officer reviews economics, the officers review legality and broker mechanics — three separate approvals on every book version.
+Accountability: the **CIO is the principal officer**; the officers report to the CIO and to the Principal (digest). Independence: the officers never author books or place orders; the Execution Agent cannot bypass a rail; the Risk Officerr reviews economics, the officers review legality and broker mechanics — three separate approvals on every book version.
 
 ## 2. The two officers
 
@@ -47,11 +47,11 @@ Both officers also sit on the investment committee for any desk charter (a chart
 
 ## 3. Book pre-clearance
 
-After the Senior Analyst drafts a version and before the Risk Officer's economic review (or in parallel, both required):
+After the Senior Analyst drafts a version and before the Risk Officerr's economic review (or in parallel, both required):
 
 1. `compliance:preclear(book_version)` runs the crisp checks per strategy and returns findings: product allowed for the instrument and surveillance status (A7/B3/B4), session and validity windows (A16/B1), lot/freeze/band feasibility (A8/A15/B7), margin and cash-collateral feasibility at the strategy's size (A10/B2/B9), PFUTP patterns (would the entry and protective orders create a self-match across desks on the same PAN? does the strategy's order pattern resemble layering?) (A6/B10), provenance of any text-derived condition (A9), expiry and physical-settlement exposure (A12), position-limit headroom (A13/A14), estimated OTR contribution (A5).
 2. Each officer decides per strategy: `clear`, `clear_with_conditions` (e.g., "CNC only", "no orders after 15:05", "size ≤ x % of ADV"), or `block` with the rule ids. Conditions become part of the book version and are enforced by the pre-order rail.
-3. A book governs only when Risk Officer + both officers have cleared at least one strategy. Auto-clearance rules the officers define (within their catalogue) let intraday revisions proceed without a fresh session; auto-clearances are recorded as the officer's decisions.
+3. A book governs only when Risk Officerr + both officers have cleared at least one strategy. Auto-clearance rules the officers define (within their catalogue) let intraday revisions proceed without a fresh session; auto-clearances are recorded as the officer's decisions.
 
 ## 4. Pre-order rail (code)
 

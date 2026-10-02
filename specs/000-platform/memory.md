@@ -16,13 +16,13 @@
 | Scope | Type | Owner | Readers | Writers | Storage |
 |---|---|---|---|---|---|
 | Working memory | working | the session | itself | itself | context + recited plan file |
-| Trade dossier | episodic per entity | Execution service (facts) + owning roles | desk team, Risk Office, Coach, Reviewers, Research Lab (time-aware) | execution service (facts), each role (own section) | PostgreSQL + file projection |
+| Trade dossier | episodic per entity | Execution service (facts) + owning roles | desk team, Risk Officer, Coach, Reviewers, Research Lab (time-aware) | execution service (facts), each role (own section) | PostgreSQL + file projection |
 | Role memory | semantic + procedural | the role | the role, Coach, Validation Reviewer | the role; Coach (lesson status, playbook revisions) | git-backed markdown `memory/roles/<role>/` + PostgreSQL mirror |
-| Desk memory | semantic + episodic | the desk | desk team, CIO, Coach | desk roles per charter; Strategist curates | `memory/desks/<desk_id>/` |
-| Firm memory | semantic | CIO | all | CIO, Risk Office (risk section), Coach (lessons index), Compliance (rules pointers) | `memory/firm/` |
+| Desk memory | semantic + episodic | the desk | desk team, CIO, Coach | desk roles per charter; Senior Analyst curates | `memory/desks/<desk_id>/` |
+| Firm memory | semantic | CIO | all | CIO, Risk Officer (risk section), Coach (lessons index), Compliance (rules pointers) | `memory/firm/` |
 | Research memory | episodic + semantic | Research Lab | Lab, CIO, Coach | Researcher, Reviewer, Data Steward | trial ledger + `research/experiments/` |
 | Ops memory | episodic + procedural | Operations | Ops, Compliance, Coach | Ops | `memory/ops/` |
-| Journal | episodic firm-level | Desk Head function (CIO's shift) | Principal, all | CIO shift | `journal/` |
+| Journal | episodic firm-level | CIO's journal shift | Principal, all | CIO shift | `journal/` |
 
 ## 3. Trade dossier
 
@@ -75,7 +75,7 @@ Injection: adopted lessons in scope are included in the role's context (bounded 
 ```
 memory/desks/<desk_id>/
   CHARTER.md            # CIO-owned
-  playbook.md           # desk procedure; Strategist curates; Coach revises with evidence
+  playbook.md           # desk procedure; Senior Analyst curates; Coach revises with evidence
   MEMORY.md             # index
   watchlist.md          # current, with reasons and dates
   regimes.md            # the desk's own regime notes
@@ -89,7 +89,7 @@ memory/desks/<desk_id>/
 memory/firm/
   MEMORY.md
   strategy.md           # CIO's firm strategy and allocation rationale history
-  risk-guidance.md      # Risk Office's standing guidance per desk
+  risk-guidance.md      # Risk Officer's standing guidance per desk
   lessons-index.md      # adopted lessons across roles (Coach)
   market-knowledge/     # cost arithmetic, microstructure notes, regulation pointers — proposed by any role, adopted by Coach/Compliance
   glossary.md
@@ -135,6 +135,6 @@ Each role runs a short curation session on its own memory (index, merge duplicat
 - **M1** Time-aware recall strips outcomes and later reviews (as in spec S5).
 - **M2** A role cannot write another role's section (denied, logged).
 - **M3** A `proposed` lesson is absent from a Trader's context; once `adopted` it is present; once `retired` it is absent.
-- **M4** Re-invoking a Position Manager after a restart shows its own prior actions and the Trader's plan in context.
+- **M4** Re-invoking an Execution Agent after a restart shows its own prior actions and the Senior Analyst's governing book version in context.
 - **M5** Replay of an invocation reassembles the same references and shows stored vs fresh output.
 - **M6** Consolidation fails the health check if any index exceeds 200 lines or any embargo violation is detected.

@@ -32,7 +32,7 @@
 |---|---|---|
 | Language | Python 3.12, `ruff`, `mypy --strict`, `pytest` | — |
 | Agent runtime | Claude Agent SDK (Python), self-hosted; roles as `AgentDefinition`s; meetings as orchestrated multi-session runs; skills from `skills/`; hooks for rails and scope | ADR-001 |
-| Models | `claude-opus-5` for deciding roles (CIO, Risk Office, Coach, Strategist, Trader, Position Manager, Researcher, Reviewer, Designer, Compliance, Skill Engineer); `claude-sonnet-5` for Analysts, Desk Reviewer per-trade, Ops, Data Steward; `claude-haiku-4-5` for batch tagging and summaries | ADR-007 |
+| Models | `claude-opus-5` for deciding roles (CIO, Risk Officer, Coach, Senior Analyst, Recalibration Agent, both Compliance Officers, Treasury, Quant Researcher, Validation Reviewer, Desk Designer, Skill Engineer); `claude-sonnet-5` for Stock Scanner, Data Ingestor, Execution Agent events, Trade Reviewer per-trade, Books & Records, Execution Quality Analyst, Ops; `claude-haiku-4-5` for batch tagging and summaries | ADR-007 |
 | Execution service | FastAPI (internal API, MCP server, dashboard API), asyncio workers | — |
 | Storage | PostgreSQL 16 native; Parquet + DuckDB for research | ADR-004 |
 | Memory | PostgreSQL truth + git-backed markdown projection; FTS retrieval | ADR-003 |
@@ -88,7 +88,7 @@ Structural test: nothing under `engine/` imports an LLM client.
 | `Watchlist` | Stock Scanner | entries[] {symbol, reasons[], features_used[], horizon_hint, priority, expected_book_quality} |
 | `DataPack` | Data Ingestor | bar refs, depth, volume_profile, fundamentals, announcements(published_at), calendars, context, quality_flags[], excluded_windows[] |
 | `StrategyBook` | Senior Analyst | symbol, period, version, global_rules, strategies[] {id, name, thesis, applies_when, condition_kind, direction, entry, stop, targets[], after_target rules, size, validity, priority, expected_r, p_success, instruments_used[], status} |
-| `RiskReview` | Risk Officer | book_version, per_strategy decisions, changes?, reasons, expected_effect |
+| `RiskReview` | Risk Officerr | book_version, per_strategy decisions, changes?, reasons, expected_effect |
 | `WatchEvent` | Rule Watch / feature service | kind (match, order_event, escalation_condition, milestone, digest), strategy_id, features snapshot, book_version |
 | `OrderAction` | Execution Agent | place/modify/cancel/convert with parameters, strategy_id, book_version, reasoning |
 | `Escalation` | Execution Agent | reason, context refs |
@@ -132,7 +132,7 @@ Bars in Parquet (`data/bars/<interval>/<symbol>/<yyyy-mm>.parquet`); `data_snaps
 
 ## 8. Security
 
-Secrets in the execution service's store (restricted env file in v2.0; `age`-encrypted backups); MCP server on localhost with per-session capability tokens; hooks and sandbox deny agent access; Principal actions signed (CLI key) or 2FA dashboard; audit chain over orders, fills, decisions, invocations, memory writes, rail events; optional read-only Kite sidecar with its own key `[NC-3]`.
+Secrets in the execution service's store (restricted env file in v2.0; `age`-encrypted backups); MCP server on localhost with per-session capability tokens; hooks and sandbox deny agent access; Principal actions signed (CLI key) or 2FA dashboard; audit chain over orders, fills, decisions, invocations, memory writes, rail events; no read-only Kite sidecar in v2.0 (NC-3 decided).
 
 ## 9. Testing
 

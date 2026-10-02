@@ -9,7 +9,14 @@ The first attempt (v1, May–Sep 2026) built a complete platform and never found
 Nothing in this repository is code yet. Everything is specification, and the specification is the source of truth from which agents implement.
 
 ```
+CLAUDE.md                         Instructions for implementing agents: reading order, non-negotiables, workflow.
 .specify/memory/constitution.md   Non-negotiable principles. Highest authority. Read first.
+.specify/templates/               spec / plan / tasks templates for feature directories.
+.specify/scripts/                 new_feature.py (scaffolder), guard_bash.py (PreToolUse hook, DH2-DEV-002).
+.claude/agents/                   spec-writer, spec-reviewer, implementer (developer agents).
+.claude/settings.json             deny rules + hooks for developer sessions.
+scripts/spec_lint.py              SDD lint: ids defined once, references resolve, tasks cite ids, stale roles, open clarifications; writes traceability.md.
+specs/README.md                   How features are specified, planned, tasked, implemented and traced.
 docs/lessons-from-v1.md           Why v1 failed; rules v2 must satisfy.
 docs/research/                    Evidence: v1 research report + 2026-09-20 research on agentic systems.
 docs/ADR/                         Architecture decision records (numbered, immutable once accepted).
@@ -26,6 +33,7 @@ specs/000-platform/               The platform-level specification:
     ui.md                           Owner interface: web console + Telegram companion + Ask the firm; screens, stack, auth (ADR-010).
     scenario-walkthrough.md         One stock, one day through the pipeline; recorded decisions.
     tasks.md                        Ordered, verifiable implementation phases and tasks.
+    traceability.md                 Generated: requirement → implementing tasks.
 specs/NNN-<feature>/              One directory per feature, created from tasks.md when implementation starts.
 ```
 

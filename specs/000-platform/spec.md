@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Spec id | `000-platform` |
-| Status | Draft v2.2 for Principal review (v2.1 + compliance and control roles: see `compliance.md`) |
+| Status | Draft v2.3 for Principal review (v2.2 + universe screen, restored RAIL/TOOL/DAT/OPS/OBS/COST/DEV text, SDD hygiene) |
 | Date | 2026-09-20 |
 | Governed by | `.specify/memory/constitution.md` v2.0.0 |
 | Inputs | `docs/lessons-from-v1.md`, `docs/research/*`, the Principal's directions of 2026-09-20 (all decisions agent-driven; the scanner → ingestor → analyst → execution → recalibration pipeline; both watch modes evaluated; books per stock per session/week) |
@@ -37,7 +37,7 @@ Multi-tenant SaaS; mobile; public API; automated broker login; Kubernetes; any d
 
 ## 4. The IPS and rails
 
-The Principal writes `rails/ips.yaml` (`[NC-1]`): total and paper capital; max daily loss and drawdown; single-name and sector caps; permitted products, segments and horizons; prohibited activities; max desks live and capital per desk; LLM daily budget. Rails (`tools-and-rails.md` §9) = IPS + regulator/broker mechanics + kill switch. Everything else is an agent decision.
+The Principal writes `rails/ips.yaml` (proposed v0.2 awaiting signature): total and paper capital; max daily loss and drawdown; single-name and sector caps; permitted products, segments and horizons; prohibited activities; max desks live and capital per desk; LLM daily budget. Rails (`tools-and-rails.md` §9) = IPS + regulator/broker mechanics + kill switch. Everything else is an agent decision.
 
 ## 5. The firm
 
@@ -144,7 +144,7 @@ Side exits: `dropped` (Scanner or Analyst, with reason), `rejected` (Risk Office
 - **DH2-CMP-004** THE SYSTEM SHALL run intraday surveillance detectors (OTR, cancel/modify ratios, self-match exposure, share of volume, closing-window activity, position limits, RMS rejection bursts) and route alerts to the Regulatory or Broker Compliance Officer for disposition within the catalogue's timelines; an officer's hold SHALL be enforced by rail.
 - **DH2-CMP-005** THE SYSTEM SHALL produce an EOD compliance close (tag completeness, reconciliation, OTR, penalties, delivery obligations, E-4 exposure, disclosures, retention) and weekly and half-yearly self-audits chaired by the CIO, with evidence bundles to the Principal.
 - **DH2-CMP-006** THE SYSTEM SHALL tag every text-derived feature with `source_ref` and `published_at`, allow only exchange-disclosed or verified sources in `applies_when`, and record provenance on every dossier (PIT).
-- **DH2-CMP-007** THE SYSTEM SHALL keep tamper-evident records (orders, fills, decisions, book versions, invocations, rail events, alerts, contract notes, ledgers) for 8 years `[NC-9]`.
+- **DH2-CMP-007** THE SYSTEM SHALL keep tamper-evident records (orders, fills, decisions, book versions, invocations, rail events, alerts, contract notes, ledgers) for 8 years (NC-9 resolved: Stock Brokers Regulations 2026 standard).
 - **DH2-CMP-008** THE SYSTEM SHALL enforce the broker's confirmed operating model (`rails/broker-confirmation.md`, 2026-09-21) as rails on every order: whitelisted static IP for order endpoints, `market_protection` on every MARKET and SL-M order, fewer than 10 order actions per second per segment, and a daily manual OAuth login with 2FA/TOTP; and SHALL block live trading if `broker.terms_confirmed` is set false by the Broker Compliance Officer on a change of terms.
 - **DH2-CMP-009** THE SYSTEM SHALL poll SEBI, NSE, BSE and Zerodha publication feeds daily, diff against the catalogue, and open PRs with effective dates through the officers.
 
@@ -156,15 +156,50 @@ Side exits: `dropped` (Scanner or Analyst, with reason), `rejected` (Risk Office
 - **DH2-CTL-004** THE SYSTEM SHALL produce daily P&L attribution per desk (alpha, costs, slippage, fees, carry, penalties) and a tax ledger (STT, income classification, turnover with 44AB alarm).
 - **DH2-CTL-005** THE SYSTEM SHALL compute implementation shortfall per fill (vs arrival, vs quote at send, vs VWAP) and let the Execution Quality Analyst calibrate the firm's cost and slippage model, versioned and adopted by PR.
 
-### 7.8 Rails (RAIL), tools (TOOL), data (DAT), operations (OPS), observability (OBS), cost (COST), development (DEV)
+### 7.8 Rails (RAIL)
 
-Unchanged from v2.0 except:
+- **DH2-RAIL-001** THE SYSTEM SHALL enforce, in code, only: IPS limits, regulator rules (order rate under 10 per second per segment, static IP, product/session rules, retention), broker mechanics (`rails/broker-confirmation.md`), and the kill switch; the rail list is `rails/RAILS.md` and changes only by the Principal.
+- **DH2-RAIL-002** WHEN a rail blocks an action, THE SYSTEM SHALL record the event on the dossier or shift, notify the acting role and the Risk Officer, and include it in the Coach's next review.
+- **DH2-RAIL-003** THE SYSTEM SHALL provide kill levels: L1 desk pause (Risk Officer, CIO), L2 firm flat-and-halt (Risk Officer, IPS breach), L3 gateway disconnect (Principal); all drilled on every release.
+
+### 7.9 Tools and execution service (TOOL)
+
+- **DH2-TOOL-001** THE SYSTEM SHALL execute orders (place, modify, cancel, protective orders, square-off, reconciliation) as deterministic code behind typed tools, with tag-before-call persistence, unknown-state polling, order-book-as-truth reconciliation and an order-rate governor.
+- **DH2-TOOL-002** THE SYSTEM SHALL provide calculators as tools: volatility (ATR, realised vol), structure (swing levels, ranges, VWAP distance), liquidity (spread, depth, turnover class), cost (per product and date, cost per R for a given stop), sizing (risk-based quantity for a stated R), margin, correlation/exposure, and any calculator an agent commissions from the Skill Engineer.
+- **DH2-TOOL-003** THE SYSTEM SHALL provide a backtest and replay engine with first-touch fills, honest limits and realised-cost models, usable by agents on paper and research data and returning the same accounting schema as live.
+- **DH2-TOOL-004** THE SYSTEM SHALL record on every order the reference price and time, bid/ask at decision, fill price and time, and on every trade the costs, slippage, `risk_inr` and `r_multiple`.
+- **DH2-TOOL-005** THE SYSTEM SHALL keep broker credentials in the execution service's secret store; no tool returns them; agent sessions cannot reach broker endpoints directly.
+- **DH2-TOOL-006** WHEN authentication fails or the egress IP mismatches, THE SYSTEM SHALL halt new orders, keep protective orders working, notify the Principal and the Risk Officer, and SHALL NOT attempt automated login.
 
 - **DH2-TOOL-007** THE SYSTEM SHALL provide a **feature service** computing the named features of the expression language every minute for all watched stocks, with health tests, and SHALL expose them to both watch modes and to the Analyst's calculators.
 - **DH2-TOOL-008** THE SYSTEM SHALL provide `books:*` tools (draft, revise, review, load, retire, request_revision) and `watch:*` tools (arm, reload, status, shadow_report).
 - **DH2-TOOL-009** THE SYSTEM SHALL provide a **universe screen** instrument that, nightly and at pre-open, applies the IPS eligibility rails (minimum ADV, minimum price, surveillance and ban lists, product permissions) to the full listed universe, computes the feature set for every eligible name, and publishes a ranked screen output per desk charter (movers, volume anomalies, trend and range breaks, fresh catalysts, relative strength) to the Stock Scanner; WHEN the Stock Scanner requests a new screen, THE SYSTEM SHALL route it to the Skill Engineer, and the Trade Reviewer SHALL score scan quality so weak screens surface as weak picks.
 - **DH2-TOOL-010** THE SYSTEM SHALL bound agent work by the watchlist, not the universe: the model cost per day SHALL scale with the number of watchlist names and the desk's `agent_watch_max_stocks`, and the desk charter SHALL set the maximum watchlist size within the IPS.
 - **DH2-COST-003** THE SYSTEM SHALL cost Agent Watch per stock-day and enforce a per-desk cap on concurrent Agent Watch sessions set by the CIO within the IPS budget.
+
+### 7.10 Data (DAT)
+
+- **DH2-DAT-001** THE SYSTEM SHALL ingest Kite ticks in `full` mode with depth, build 1-minute, 15-minute and daily bars, and persist bid/ask at decision times.
+- **DH2-DAT-002** THE SYSTEM SHALL import v1's bar history, maintain daily bars for the research universe, a point-in-time universe table, delisting and corporate-action tables, and the instrument master with lot sizes, freeze quantities, expiries and holidays as dated data.
+- **DH2-DAT-003** THE SYSTEM SHALL ingest NSE announcements, results calendar and corporate actions with `published_at` and expose them to agents with that timestamp.
+- **DH2-DAT-004** THE SYSTEM SHALL test agent-visible features for degeneracy and SHALL tell the agent when a feature is withheld and why.
+- **DH2-DAT-005** THE SYSTEM SHALL store research data as Parquet queried by DuckDB and transactional data in PostgreSQL.
+
+### 7.11 Operations (OPS)
+
+- **DH2-OPS-001** THE SYSTEM SHALL run a durable scheduler that triggers shifts and events, records runs, resumes after crashes, and lets desks set their own meeting and review cadence within firm hours.
+- **DH2-OPS-002** THE SYSTEM SHALL deliver a daily journal and weekly digest to the Principal: desks, decisions of note, decision-quality scores, expectancy and cost per R, drawdown vs IPS, LLM spend, incidents, organisational changes.
+- **DH2-OPS-003** THE SYSTEM SHALL provide an Operations Engineer with runbooks-as-skills and security/kill-switch ownership, and deterministic health checks that remediate first and escalate second.
+- **DH2-OPS-004** THE SYSTEM SHALL deploy only CI-built images to the Hostinger VPS; no source on the VPS; configuration only through the declared environment file.
+
+### 7.12 Observability (OBS), cost (COST), development (DEV)
+
+- **DH2-OBS-001** THE SYSTEM SHALL emit traces for every shift, session, tool call and order with correlation ids, and metrics for feed freshness, reconciliation lag, rail events, order-rate usage, LLM cost by role and desk, decision scores by role, expectancy and cost per R by desk.
+- **DH2-OBS-002** THE SYSTEM SHALL alert the Principal on kill events, token failure, feed stall over 5 minutes, reconciliation mismatch, IPS proximity (80 % of any limit) and budget exhaustion.
+- **DH2-COST-001** THE SYSTEM SHALL enforce per-session budgets and per-desk daily budgets allocated by the CIO within the IPS budget, stop gracefully at limits, and report cost per decision and per trade weekly.
+- **DH2-COST-002** THE SYSTEM SHALL route models per role as declared in role definitions and cache stable prompt prefixes; prompt-cache hit rate is a reported metric.
+- **DH2-DEV-001** THE SYSTEM SHALL be built from feature specs with requirement ids, verified by CI: ruff, mypy --strict, unit coverage ≥ 90 % for execution/accounting/rails and ≥ 85 % elsewhere, integration tests on PostgreSQL, skill evals, the spec lint (`scripts/spec_lint.py`), and the kill drill on releases.
+- **DH2-DEV-002** THE SYSTEM SHALL use pre-tool-use hooks in developer and runtime harnesses that deny access to secrets, the production environment file and broker endpoints.
 
 ## 8. Acceptance scenarios
 

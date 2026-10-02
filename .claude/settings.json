@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)", "Read(./.env.*)", "Read(/etc/dhanada*/**)", "Read(**/secrets/**)",
+      "Edit(./rails/ips.yaml)", "Edit(./rails/RAILS.md)", "Edit(./rails/broker-confirmation.md)", "Edit(./.specify/memory/constitution.md)",
+      "Bash(curl *kite.zerodha.com*)", "Bash(curl *api.kite.trade*)", "Bash(ssh *)", "Bash(scp *)",
+      "Bash(docker *)", "Bash(psql *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{ "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.specify/scripts/guard_bash.py" }]
+      }
+    ]
+  }
+}

@@ -7,21 +7,21 @@
 | Task | Feature spec | Requirements | Verification |
 |---|---|---|---|
 | 0.0 VPS reset (same Hostinger VPS as v1; Principal's decision 2026-10-02): **export and verify first** — PostgreSQL dump of v1 bars (1m/15m/daily), trial ledger, cost calibration, fills with reference prices; Kite app credentials and static-IP registration (unchanged, same box); `age` backup keys; monitor-bot email credentials. Then stop and remove all v1 containers, images, crons, `/opt/dhanada-prod`, `/etc/dhanada-prod`, stale source trees and logs; rebuild the baseline (Docker, native PostgreSQL 16, Caddy, Tailscale); re-create the deploy user and firewall; restore only the exported data into the v2 schema when `005-historical-data` lands. Executed only on the Principal's explicit go, outside market hours, with a Hostinger snapshot taken first | `000-vps-reset` | DH2-OPS-004, DH2-DAT-002 | Snapshot exists; export checksums recorded; box boots clean with only the baseline; Tailscale and static IP verified |
-| 0.1 Repo, CI, release workflow, structural no-LLM test, hooks scaffolding | `001-repo-and-ci` | DH2-DEV-001/002 | CI green; release blocked on failing tests |
+| 0.1 Repo, CI (ruff, mypy, pytest with floors, `scripts/spec_lint.py`, structural no-LLM test), release workflow, hooks | `001-repo-and-ci` | DH2-DEV-001/002 | CI green; release blocked on failing tests |
 | 0.2 Contracts: all decision objects and runtime records | `002-contracts` | DH2-FIRM-003/004 | Schema tests |
 | 0.3 Rails: `rails/RAILS.md`, `ips.yaml` loader, rail evaluation library | `003-rails` | DH2-RAIL-001/002 | Every rail unit-tested; rail event recorded with id |
-| 0.3a [P] Rule catalogue and feeds: `rails/market_rules/` schema (A1–A19, B1–B10 with sources, effective dates, `[verify]` flags), feed pollers (surveillance lists, ban list, price bands, MIS list, haircuts, freeze quantities, calendar, circulars), compliance rails (`rails.compliance.*`) | `003a-rule-catalogue` | DH2-CMP-001/003/009 | Rails reproduce catalogue rows on dated fixtures; feeds refresh idempotently |
+| 0.3a [P] Rule catalogue and feeds: `rails/market_rules/` schema (A1–A19, B1–B10 with sources, effective dates, verification status), feed pollers (surveillance lists, ban list, price bands, MIS list, haircuts, freeze quantities, calendar, circulars), compliance rails (`rails.compliance.*`) | `003a-rule-catalogue` | DH2-CMP-001/003/009 | Rails reproduce catalogue rows on dated fixtures; feeds refresh idempotently |
 | 0.4 [P] Market data: Kite adapter (token, static IP, order-rate bucket), `full` ticker, bars, REST fallback, instrument master | `004-market-data` | DH2-DAT-001, DH2-TOOL-006 | Recorded ticks → bars; IP mismatch → state |
-| 0.5 [P] Historical import and point-in-time universe, delistings, NSE feeds with `published_at` | `005-historical-data` | DH2-DAT-002/003 | Universe as-of differs by date; delisted present |
+| 0.5 [P] Historical import and point-in-time universe, delistings, NSE feeds with `published_at` | `005-historical-data` | DH2-DAT-002/003/005 | Universe as-of differs by date; delisted present |
 | 0.6 [P] Calculators `calc:*` with versioning and pinned tests | `006-calculators` | DH2-TOOL-002 | Each calculator reproducible from stored inputs |
-| 0.6a [P] Universe screen: IPS eligibility filter, nightly and pre-open feature computation over the eligible universe, per-desk ranked screens, screen-request flow to the Skill Engineer | `006a-universe-screen` | DH2-TOOL-009/010 | Eligible set reproduces the IPS filters on a dated fixture; screen output for ~500 names computes within minutes; watchlist size bounds modelled cost |
+| 0.6a [P] Universe screen: IPS eligibility filter, nightly and pre-open feature computation over the eligible universe, per-desk ranked screens, screen-request flow to the Skill Engineer | `006a-universe-screen` | DH2-TOOL-009/010, DH2-DAT-004 | Eligible set reproduces the IPS filters on a dated fixture; screen output for ~500 names computes within minutes; watchlist size bounds modelled cost |
 | 0.7 [P] Accounting + counterfactual baselines + cost calibration + reconciliation engine (ledger vs broker snapshots, contract notes) + P&L attribution + tax ledger | `007-accounting-and-books` | DH2-TOOL-004, DH2-PIPE-009, DH2-CTL-003/004 | Worked examples; synthetic break detected; attribution sums to net P&L; STT per A18 |
 | 0.7a [P] Treasury instruments: margin/basket-margin readers, peak-margin snapshot simulator, settlement calendar, collateral haircuts; TCA instruments: implementation shortfall per fill | `007a-treasury-tca-instruments` | DH2-CTL-001/002/005 | Margin plan reproduces a worked expiry-week example; shortfall computed on fixture fills |
 | 0.8 [P] Sim/replay engine (rule mode) with parity harness | `008-sim-engine` | DH2-TOOL-003 | T7; parity passes |
 | 0.9 Trial ledger + stats + zero-alpha calibration tool | `009-ledger` | DH2-LRN-003 | L3; pinned DSR/PSR/MTRL |
-| 0.10 Dossier store: states, sections, events, evidence, counterfactual slots, projection, time-aware retrieval | `010-dossiers` | DH2-DSK-001, DH2-MEM-001/002/005 | M1, M2, M5 |
-| 0.11 Execution service: order intents, tags, unknown-state, reconciliation, protective orders (MIS OCO watchdog, GTT), square-off, subscriptions — paper first | `011-execution-service` | DH2-TOOL-001, DH2-DSK-006 | T1–T5, T9 in paper |
-| 0.12 Audit chain, observability, notifications | `012-audit-observability` | DH2-CMP-001, DH2-OBS-001/002 | Chain verifies; spans present |
+| 0.10 Dossier store: states, sections, events, evidence, counterfactual slots, projection, time-aware retrieval | `010-dossiers` | DH2-PIPE-001, DH2-MEM-001/002/005 | M1, M2, M5 |
+| 0.11 Execution service: order intents, tags, unknown-state, reconciliation, protective orders (MIS OCO watchdog, GTT), square-off, subscriptions — paper first | `011-execution-service` | DH2-TOOL-001, DH2-EXEC-004/006 | T1–T5, T9 in paper |
+| 0.12 Audit chain (8-year retention), observability, notifications | `012-audit-observability` | DH2-CMP-001/007, DH2-OBS-001/002 | Chain verifies; spans present |
 
 ## Phase 1 — The firm runs (paper), one desk end to end · ~4 weeks
 
@@ -41,7 +41,7 @@
 | 1.7c Agent Watch (continuous sessions, digests, concurrency cap, cost recording) | `019c-agent-watch` | DH2-EXEC-001, DH2-COST-003 | S2, S3; cost per stock-day recorded |
 | 1.8 [P] Risk Officer role + skills (book review, auto-approval rules, sweeps, guidance, conference, drill) | `020-risk-office` | DH2-PIPE-006/007, DH2-RAIL-003 | S6; drill passes |
 | 1.9 Decision scoring service + calibration records + counterfactuals per book version and watch mode + watch-mode report | `021-decision-scoring` | DH2-LRN-001/007, DH2-PIPE-009/010, DH2-EXEC-007 | L1; S5; first watch-mode report |
-| 1.10 CIO role (charters, allocations, committee, journal) — first desk chartered on paper: Positional Momentum Desk `[NC-5]` | `022-cio-and-first-desk` | DH2-FIRM-002/006 | Charter applied; desk trades paper end to end |
+| 1.10 CIO role (charters, allocations, committee, journal) — first desk chartered on paper: Positional Momentum Desk (NC-5 decided) | `022-cio-and-first-desk` | DH2-FIRM-002/006 | Charter applied; desk trades paper end to end |
 
 Exit criterion: one desk trading paper for two weeks with both watch modes running (one governing, one shadow), every decision attributable to a role, every trade reviewed and scored with counterfactuals per version and mode, journal and digest delivered, spend within budget.
 
@@ -52,9 +52,9 @@ Exit criterion: one desk trading paper for two weeks with both watch modes runni
 | 2.1 Coach role + skills (scoring, coaching, playbook revision with evals, lesson curation) | `023-coach` | DH2-LRN-002, DH2-MEM-003 | S7, L2 |
 | 2.2 Research Lab roles: Quant Researcher, Data Steward, Validation Reviewer, Desk Designer + agentic replay mode | `024-research-lab` | DH2-LRN-003/004/006 | L4; agentic replay report for the first desk |
 | 2.3 Skill Engineer role + PR flow with agent review + CI | `025-skill-engineer` | DH2-LRN-005 | S8, L5 |
-| 2.4 Second and third desks chartered on paper from Lab proposals (Event/Catalyst, Intraday Breakout `[NC-5]`) | — | DH2-FIRM-002 | Committee minutes; desks trading paper |
+| 2.4 Second and third desks chartered on paper from Lab proposals (Event/Catalyst, Intraday Breakout, paper-only (NC-5 decided)) | — | DH2-FIRM-002 | Committee minutes; desks trading paper |
 | 2.4a [P] Jev (TypeSafe System One) evaluation as a judgment instrument for Agent Watch conditions, event triage, catalyst tagging — shadow arm, fail-open, calibration-scored (`docs/decisions/2026-10-02-jev-evaluation.md`) | `025a-jev-instrument` | DH2-LRN-005, DH2-EXEC-002 | ≥ 300 shadow decisions scored; promotion recorded in committee minutes |
-| 2.5 Owner console v0 (Today, Inbox, Desk, Dossiers, Books, Agents, Journal, Governance, Compliance, Research), SSE bus, passkeys/TOTP over Tailscale (tailnet setup: VM package, laptop and phone apps; console bound to tailnet address; public vhost only for `/tg/*` and `/api/health`), pnpm lockfile CI, Playwright | `026-owner-console` | DH2-UI-001…007, 010…012 | U1, U2, U4, U6, U7, U8 |
+| 2.5 Owner console v0 (Today, Inbox, Desk, Dossiers, Books, Agents, Journal, Governance, Compliance, Research), SSE bus, passkeys/TOTP over Tailscale (tailnet setup: VM package, laptop and phone apps; console bound to tailnet address; public vhost only for `/tg/*` and `/api/health`), pnpm lockfile CI, Playwright | `026-owner-console` | DH2-UI-001…007, DH2-UI-010…012 | U1, U2, U4, U6, U7, U8 |
 | 2.5a [P] Telegram companion (8 verbs, notification matrix, signed one-time codes) | `026a-telegram-companion` | DH2-UI-003/004/008 | U1, U3 |
 | 2.5b [P] Ask the firm (read-only tools, citations, widget catalogue, structural test) | `026b-ask-the-firm` | DH2-UI-009 | U5 |
 
@@ -72,10 +72,10 @@ Exit criterion: three desks on paper across ≥ 2 horizons; weekly coaching revi
 
 | Task | Notes |
 |---|---|
-| 4.1 The CIO moves the first desk to live within the IPS (initial allocation cap in `ips.yaml`); the Principal is informed via the digest | DH2-FIRM-006 |
-| 4.2 NFO adapter and index-futures desk proposals | Lab backlog |
-| 4.3 pgvector retrieval if recall proves insufficient (ADR) | measure first |
-| 4.4 Managed Agents for Lab shifts if VM compute limits (ADR-001 revisit) | trading roles stay on the VM |
+| 4.1 The CIO moves the first desk to live within the IPS after the go-live procedure in `rails/ips.yaml` holds; the Principal signs | `030-go-live` | DH2-FIRM-006, DH2-CMP-008, DH2-UI-004 | Evidence bundle complete; signature recorded |
+| 4.2 NFO adapter and index-futures desk proposals (unlocks at ₹30 lakh live capital) | `031-nfo-futures` | DH2-TOOL-001, DH2-DAT-002 | Futures orders through the same execution service in paper |
+| 4.3 pgvector retrieval if recall proves insufficient (new ADR) | `032-memory-retrieval-v2` | DH2-MEM-002 | Recall measured before and after |
+| 4.4 Managed Agents for Lab shifts if VPS compute limits (ADR-001 revisit) | `033-lab-runtime-v2` | DH2-LRN-003 | Trading roles stay on the VPS |
 
 ## Definition of done (every task)
 

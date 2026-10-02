@@ -6,7 +6,7 @@
 
 | Loop | Cadence | Owner | What changes |
 |---|---|---|---|
-| **Trade loop** | per trade | Desk Reviewer → Coach | Role calibration records; lesson proposals; per-role coaching notes |
+| **Trade loop** | per trade | Trade Reviewer → Coach | Role calibration records; lesson proposals; per-role coaching notes |
 | **Playbook loop** | weekly per desk | Coach (with desk) | Desk and role playbooks (versioned); lesson adoption/retirement; eval cases; prompt/skill change requests |
 | **Firm loop** | monthly + on proposal | Research Lab → Desk Designer → Validation Reviewer → investment committee (CIO) | Desk charters, allocations, promotions to live, retirements; new calculators/skills |
 
@@ -17,7 +17,7 @@ For every decision recorded on a dossier:
 | Score | Definition |
 |---|---|
 | Calibration | Stated probability vs outcome (Brier, reliability by bucket) and expected R vs realised R, per role, desk, regime, horizon, with n and CIs |
-| Counterfactual delta | Realised R minus each baseline: `no_trade` (0), `per_book_version` (each version that governed, replayed over the trade's bars — scores recalibration and escalation resolutions), `per_watch_mode` (the shadow mode's would-be actions simulated), `unmodified_by_risk` (where the Risk Officer modified), `desk_registered` baselines |
+| Counterfactual delta | Realised R minus each baseline: `no_trade` (0), `per_book_version` (each version that governed, replayed over the trade's bars — scores recalibration and escalation resolutions), `per_watch_mode` (the shadow mode's would-be actions simulated), `unmodified_by_risk` (where the Risk Officerr modified), `desk_registered` baselines |
 | Process adherence | Playbook checklist items evidenced in the section (instruments cited, invalidation stated, forecast given) — computed by a deterministic checker plus an LLM-judge pass (Coach) calibrated against the Principal's spot checks |
 | Cost discipline | Plan's stated cost per R vs realised |
 | Timeliness | Response latency to events while owning a state |
@@ -58,7 +58,7 @@ The Desk Designer composes `desks/<proposed_id>/PROPOSAL.md`: charter draft, tea
 
 ## 5. Promotion and retirement are committee decisions
 
-There is no threshold table that promotes or retires. The committee sees the desk's own proposed criteria, its statistics with n and CIs, DSR and MTRL progress, the counterfactual record, the Risk Office's view and the Validation Reviewer's verdict, and the CIO decides. Every decision records the evidence it rested on, so the Coach can later score the CIO's decisions (did promoted desks perform as expected?). The IPS caps (max desks live, capital per desk) are the only rails.
+There is no threshold table that promotes or retires. The committee sees the desk's own proposed criteria, its statistics with n and CIs, DSR and MTRL progress, the counterfactual record, the Risk Officer's view and the Validation Reviewer's verdict, and the CIO decides. Every decision records the evidence it rested on, so the Coach can later score the CIO's decisions (did promoted desks perform as expected?). The IPS caps (max desks live, capital per desk) are the only rails.
 
 ## 6. Skills and calculators evolve
 

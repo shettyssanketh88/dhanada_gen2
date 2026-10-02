@@ -44,7 +44,7 @@ A desk is a chartered instance of this pipeline with a mandate (universe, horizo
 | Inputs | Watchlist; data catalogue; feature health; own memory of source reliability; NSE/BSE corporate actions, F&O contract adjustments, results, index rebalances, RBI/expiry calendar |
 | Outputs | `DataPack {symbol, as_of, bars[1m,15m,1d] refs, depth, volume_profile, fundamentals, announcements(published_at), results_calendar, corporate_actions, sector_index_context, derivatives_context, quality_flags[], excluded_windows[]}` |
 | Tools | `data:*` (read and ingest jobs), `features:test`, `desk:attach_datapack`, `git:open_pr(data/)` for new sources, `memory:*` |
-| Skills | `building-data-packs`, `checking-data-quality`, `commissioning-data-sources`, `maintaining-event-calendar` |
+| Skills | `building-data-packs`, `checking-data-quality`, `commissioning-data-sources`, `maintaining-event-calendar`; for the research universe at night: `curating-universe`, `defining-features` |
 | Folded duty | **Event and corporate-actions calendar** (from the roles gap analysis): ex-dates, F&O lot/strike adjustments, merger/demerger auto-closes, results, expiry and rebalance blackouts, published to the Analyst, Risk Officer, Treasury and Books & Records. |
 
 ### 3. Senior Analyst

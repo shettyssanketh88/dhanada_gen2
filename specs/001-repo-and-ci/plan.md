@@ -44,5 +44,6 @@ The three scripts are command-line programs, so they are tested as programs (sub
 
 ## Risks and rollback
 - The guard hook becomes stricter: chained commands that mention a guarded word are now denied even when they start with a read-only command. A developer session that hits this rewrites the command as a single read; nothing is lost.
+- The guard matches text, so it is best-effort: a glob or an indirect path (a wildcard, a variable) that never spells a guarded name is not caught. The controls behind it are the `Edit` deny rules in `.claude/settings.json` and review of the PR diff.
 - The release workflow cannot be exercised without pushing a tag; its gating is asserted structurally and by the first real release.
 - Rollback: revert the PR; nothing outside the repository changes.

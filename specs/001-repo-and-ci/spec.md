@@ -28,7 +28,7 @@ Give every later feature a verifier. v1 shipped images that were built without t
 - **DH2-DEV-001.5** IF `specs/000-platform/traceability.md` in the commit differs from what `scripts/spec_lint.py` generates, THEN THE SYSTEM SHALL fail the build.
 - **DH2-DEV-001.6** WHEN a tag `v*` is pushed, THE SYSTEM SHALL run the full CI workflow on that commit and SHALL publish the release only if it passed.
 - **DH2-DEV-002.1** WHEN a developer-session Bash command references a secret location (`.env` files other than `.env.example`, `/etc/dhanada*`, a `secrets/` directory), THE SYSTEM SHALL deny it, including read-only commands.
-- **DH2-DEV-002.2** WHEN a developer-session Bash command references a broker endpoint, a production tool (`ssh`, `scp`, `docker`, `psql`) or a Principal-owned file (`rails/ips.yaml`, `rails/RAILS.md`, `rails/broker-confirmation.md`, the constitution), THE SYSTEM SHALL deny it unless every command in the line is a read-only command (`cat`, `sed -n`, `grep`, `head`, `tail`, `ls`, `git diff|log|show|status`) with no output redirection or command substitution.
+- **DH2-DEV-002.2** WHEN a developer-session Bash command references a broker endpoint, a production tool (`ssh`, `scp`, `docker`, `psql`) or a Principal-owned file (`rails/ips.yaml`, `rails/RAILS.md`, `rails/broker-confirmation.md`, the constitution), THE SYSTEM SHALL deny it unless every command in the line is a read-only command (`cat`, `sed -n N,Mp <file>`, `grep`, `head`, `tail`, `ls`, `git diff|log|show|status` without `--output`) with no redirection or command substitution.
 - **DH2-DEV-002.3** WHEN the hook denies a command, THE SYSTEM SHALL exit with status 2 and name the requirement and the matched patterns on standard error.
 
 ## 4. Acceptance scenarios
@@ -37,7 +37,7 @@ Give every later feature a verifier. v1 shipped images that were built without t
 - **F3** Given a coverage report where `engine/rails` is at 89 % and everything else at 100 %, When the floor check runs, Then it fails naming `engine/rails`, 89 % and the 90 % floor; at 90 % it passes; Given `engine/features` at 85 % it passes and at 84 % it fails; Given no statements under a path, it passes.
 - **F4** Given a spec tree where a feature spec cites an id that the platform spec does not define, When the spec lint runs, Then it exits 1 and names the id and the file; Given a task row with no requirement id, Then it exits 1 naming the task.
 - **F5** Given the command `cat .env`, When the guard hook evaluates it, Then it is denied with exit status 2; Given `cat .env.example`, Then it is allowed.
-- **F6** Given `cat rails/ips.yaml`, Then allowed; Given `ls; curl https://api.kite.trade/orders`, `cat rails/ips.yaml > /tmp/x`, `grep x rails/ips.yaml | ssh host`, or `echo x >> rails/ips.yaml`, Then each is denied with exit status 2 and the message names DH2-DEV-002.
+- **F6** Given `cat rails/ips.yaml`, Then allowed; Given `ls; curl https://api.kite.trade/orders`, `cat rails/ips.yaml > /tmp/x`, `grep x rails/ips.yaml | ssh host`, `echo x >> rails/ips.yaml`, `sed -n -i s/false/true/ rails/ips.yaml` or `git diff --output=rails/ips.yaml`, Then each is denied with exit status 2 and the message names DH2-DEV-002.
 - **F7** Given a command that references none of the guarded patterns, Then the hook exits 0 with no output.
 - **F8** Given a tag `v*` on a commit whose CI workflow fails, When the release workflow runs, Then the publish job does not run (it depends on the CI job).
 

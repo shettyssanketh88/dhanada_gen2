@@ -24,9 +24,12 @@ GUARDED = [
     r"rails/broker-confirmation\.md",
     r"constitution\.md",
 ]
-READ_ONLY = re.compile(r"^\s*(cat|sed -n|grep|head|tail|ls|git (diff|log|show|status))\b")
+READ_ONLY = re.compile(
+    r"^\s*((cat|grep|head|tail|ls|git (diff|log|show|status))\b|sed -n '?\d+(,\d+)?p'? [^-\s]\S*\s*$)"
+)
 SEPARATORS = re.compile(r"\|\||&&|[|;&\n]")
-UNSAFE = re.compile(r"[<>`]|\$\(")
+# redirection, command substitution, and the git flag that writes a file; sed is limited to `sed -n N,Mp file`
+UNSAFE = re.compile(r"[<>`]|\$\(|--output")
 
 
 def hits(patterns: list[str], cmd: str) -> list[str]:

@@ -6,6 +6,7 @@
 
 | Task | Feature spec | Requirements | Verification |
 |---|---|---|---|
+| 0.0 VPS reset (same Hostinger VPS as v1; Principal's decision 2026-10-02): **export and verify first** — PostgreSQL dump of v1 bars (1m/15m/daily), trial ledger, cost calibration, fills with reference prices; Kite app credentials and static-IP registration (unchanged, same box); `age` backup keys; monitor-bot email credentials. Then stop and remove all v1 containers, images, crons, `/opt/dhanada-prod`, `/etc/dhanada-prod`, stale source trees and logs; rebuild the baseline (Docker, native PostgreSQL 16, Caddy, Tailscale); re-create the deploy user and firewall; restore only the exported data into the v2 schema when `005-historical-data` lands. Executed only on the Principal's explicit go, outside market hours, with a Hostinger snapshot taken first | `000-vps-reset` | DH2-OPS-004, DH2-DAT-002 | Snapshot exists; export checksums recorded; box boots clean with only the baseline; Tailscale and static IP verified |
 | 0.1 Repo, CI, release workflow, structural no-LLM test, hooks scaffolding | `001-repo-and-ci` | DH2-DEV-001/002 | CI green; release blocked on failing tests |
 | 0.2 Contracts: all decision objects and runtime records | `002-contracts` | DH2-FIRM-003/004 | Schema tests |
 | 0.3 Rails: `rails/RAILS.md`, `ips.yaml` loader, rail evaluation library | `003-rails` | DH2-RAIL-001/002 | Every rail unit-tested; rail event recorded with id |

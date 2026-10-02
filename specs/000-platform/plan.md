@@ -38,7 +38,7 @@
 | Memory | PostgreSQL truth + git-backed markdown projection; FTS retrieval | ADR-003 |
 | Scheduler | Engine-owned durable runner (`shift_runs`, `shift_steps`, `events`) | ADR-006 |
 | Broker | Kite Connect v3 | tools-and-rails.md |
-| Deployment | Docker Compose, ghcr.io, GitHub Actions | ADR-005 |
+| Deployment | Docker Compose on a Hostinger KVM VPS (Mumbai, static IPv4), ghcr.io images, GitHub Actions; Tailscale on the VPS for owner access | ADR-005 |
 | Observability | OpenTelemetry, Prometheus, JSON logs | — |
 | Notifications | Telegram (interrupts, digests, login reminder) + email (journal, digest, records) | ADR-010 |
 | Owner interface | Web console (Vite 8 + React 19 + TS, shadcn, TanStack, lightweight-charts, Recharts, AI SDK + assistant-ui; pnpm frozen lockfile) + Telegram bot (aiogram webhook); SSE from the event bus; passkeys/TOTP over Tailscale; no TUI — see `ui.md` | ADR-010 |

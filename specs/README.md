@@ -24,4 +24,5 @@ Spec, plan and tasks exist and lint clean; tests from scenarios pass in CI with 
 | Id | Name | Phase | Status |
 |---|---|---|---|
 | 000 | platform | — | specified (v2.3) |
-| 000-vps-reset … 033 | see `000-platform/tasks.md` | 0–4 | not started |
+| 001 | repo-and-ci | 0 | implementing |
+| 000-vps-reset, 002 … 033 | see `000-platform/tasks.md` | 0–4 | not started |

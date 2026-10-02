@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Scaffold specs/NNN-<name>/ from .specify/templates. Usage: new_feature.py 001-repo-and-ci "Repo and CI" """
-import pathlib, sys
+
+import pathlib
+import sys
+
 root = pathlib.Path(__file__).resolve().parents[2]
 if len(sys.argv) < 3:
     sys.exit(__doc__)

@@ -1,0 +1,41 @@
+name: ci
+
+# DH2-DEV-001 — CI is the only verifier (constitution X.2). Spec: specs/001-repo-and-ci.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          enable-cache: true
+      - name: Install (locked)
+        run: uv sync --locked
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Types
+        run: uv run mypy
+      - name: Tests
+        run: uv run pytest
+      - name: Coverage floors
+        run: uv run python scripts/check_coverage.py coverage.json
+      - name: Spec lint
+        run: uv run python scripts/spec_lint.py
+      - name: Traceability is current
+        run: git diff --exit-code -- specs/000-platform/traceability.md

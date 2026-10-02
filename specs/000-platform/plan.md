@@ -88,7 +88,7 @@ Structural test: nothing under `engine/` imports an LLM client.
 | `Watchlist` | Stock Scanner | entries[] {symbol, reasons[], features_used[], horizon_hint, priority, expected_book_quality} |
 | `DataPack` | Data Ingestor | bar refs, depth, volume_profile, fundamentals, announcements(published_at), calendars, context, quality_flags[], excluded_windows[] |
 | `StrategyBook` | Senior Analyst | symbol, period, version, global_rules, strategies[] {id, name, thesis, applies_when, condition_kind, direction, entry, stop, targets[], after_target rules, size, validity, priority, expected_r, p_success, instruments_used[], status} |
-| `RiskReview` | Risk Officerr | book_version, per_strategy decisions, changes?, reasons, expected_effect |
+| `RiskReview` | Risk Officer | book_version, per_strategy decisions, changes?, reasons, expected_effect |
 | `WatchEvent` | Rule Watch / feature service | kind (match, order_event, escalation_condition, milestone, digest), strategy_id, features snapshot, book_version |
 | `OrderAction` | Execution Agent | place/modify/cancel/convert with parameters, strategy_id, book_version, reasoning |
 | `Escalation` | Execution Agent | reason, context refs |
@@ -126,7 +126,7 @@ Decision objects carry the agent's numbers; validation checks type, rails and co
 | Research | `research_trials`, `preregistrations`, `experiments`, `backlog_items`, `review_verdicts`, `desk_proposals`, `committee_minutes` |
 | Memory | `memory_items`, `memory_retrievals`, `journal_entries` |
 | Runtime | `shift_runs`, `shift_steps`, `events`, `invocations`, `llm_costs` |
-| Audit | `audit_chain` (hash-chained, monthly partitions, 5-year retention) |
+| Audit | `audit_chain` (hash-chained, monthly partitions, 8-year retention) |
 
 Bars in Parquet (`data/bars/<interval>/<symbol>/<yyyy-mm>.parquet`); `data_snapshots` for immutable research inputs.
 

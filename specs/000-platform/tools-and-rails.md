@@ -8,13 +8,13 @@
 |---|---|
 | Which stocks (Scanner); which data (Ingestor) | Fetch, store, serve data; compute features every minute; test feature health |
 | Strategies, conditions, buy/stop/sell prices, sizes, priorities (Analyst) | Validate type, rails and consistency; version and store books |
-| Approve/modify/reject (Risk Officerr) | Record; auto-apply the Risk Officerr's own auto-approval rules |
+| Approve/modify/reject (Risk Officer) | Record; auto-apply the Risk Officer's own auto-approval rules |
 | Which strategy applies now, how to work the order, when to escalate (Execution Agent) | Rule Watch evaluates crisp conditions per tick; place/modify/cancel/track/reconcile orders; keep protective orders working; fire subscriptions |
 | Retire/adjust/add strategies (Recalibration Agent) | Strategy-family statistics; counterfactuals per book version and watch mode |
 | Capital, charters, watch-mode governance (CIO) | Apply allocations; keep accounts; statistics |
 | Lessons, templates, playbooks, skills (Coach, Skill Engineer) | Store, version, index, retrieve memory; run evals and tests |
 | Experiments and their interpretation (Lab) | Run backtests/replays; record trials with N and k |
-| Pauses and halts within the IPS (Risk Officerr) | Enforce IPS/regulatory rails; kill switch mechanics |
+| Pauses and halts within the IPS (Risk Officer) | Enforce IPS/regulatory rails; kill switch mechanics |
 
 ## 2. Feature service (`engine/features/`)
 
@@ -83,7 +83,7 @@ Volatility, structure, liquidity, cost (round trip and cost per R for a stop), s
 |---|---|---|
 | `books:draft(symbol, period, book)` | Senior Analyst | Validates (type, rails, consistency, expression parse); stores version n |
 | `books:revise(symbol, changes, rationale)` | Senior Analyst | New version; records which revision requests it answers |
-| `books:review(book_version, per_strategy_decisions)` | Risk Officerr | Records review; applies auto-approval rules the Risk Officerr defined |
+| `books:review(book_version, per_strategy_decisions)` | Risk Officer | Records review; applies auto-approval rules the Risk Officer defined |
 | `books:load(symbol)` | Execution Agent / watch | Governing version |
 | `books:request_revision(symbol, strategy_id, change, evidence)` | Recalibration Agent | Queues a request to the Analyst |
 | `books:retire(symbol, strategy_id, reason)` | Senior Analyst | Marks retired in a new version |
@@ -98,11 +98,11 @@ As v2.0 (`engine/sim/`, `engine/accounting/`, `engine/data/`), with: counterfact
 
 ## 9. Rails (`rails/RAILS.md`, `rails/ips.yaml`, `rails/market_rules/`)
 
-Unchanged from v2.0: `ips.*` (daily loss, drawdown, single name, sector, products, segments, horizons, prohibited, capital per desk, LLM budget), `sebi.*` (order rate, static IP, session, retention), `broker.*` (token, freeze qty, lot size, conversion window, GTT limits, market protection), `desk.capital`, `kill.L1/L2/L3`, plus (v2.2, `compliance.md`): `compliance.*` (ip, ops, tag, session, instrument, surveillance_status, product, margin, self_match, ban_list, expiry_exposure, clearance_conditions, provenance, hold) evaluated synchronously from the Compliance Officers' rule catalogue A1–A19/B1–B10 and their clearance conditions and holds; `broker.terms_confirmed` (true since 2026-09-21 per `rails/broker-confirmation.md`; the Broker Compliance Officer may set it false on a change of terms, blocking live orders); `broker.daily_auth` (token only from the Principal's daily OAuth + 2FA/TOTP login; no automated login); `books.clean` (new book approvals held while a reconciliation break is unresolved). A rail event is recorded on the dossier or shift, sent to the acting role and the Risk Officerr, and included in the Coach's review. Rails reject and explain; they never alter a decision silently.
+Unchanged from v2.0: `ips.*` (daily loss, drawdown, single name, sector, products, segments, horizons, prohibited, capital per desk, LLM budget), `sebi.*` (order rate, static IP, session, retention), `broker.*` (token, freeze qty, lot size, conversion window, GTT limits, market protection), `desk.capital`, `kill.L1/L2/L3`, plus (v2.2, `compliance.md`): `compliance.*` (ip, ops, tag, session, instrument, surveillance_status, product, margin, self_match, ban_list, expiry_exposure, clearance_conditions, provenance, hold) evaluated synchronously from the Compliance Officers' rule catalogue A1–A19/B1–B10 and their clearance conditions and holds; `broker.terms_confirmed` (true since 2026-09-21 per `rails/broker-confirmation.md`; the Broker Compliance Officer may set it false on a change of terms, blocking live orders); `broker.daily_auth` (token only from the Principal's daily OAuth + 2FA/TOTP login; no automated login); `books.clean` (new book approvals held while a reconciliation break is unresolved). A rail event is recorded on the dossier or shift, sent to the acting role and the Risk Officer, and included in the Coach's review. Rails reject and explain; they never alter a decision silently.
 
 ## 10. Kill switch
 
-L1 desk pause (Risk Officerr, CIO); L2 firm flat-and-halt (Risk Officerr; IPS rails); L3 gateway disconnect (Principal). Drilled on every release in paper with `try/finally` semantics.
+L1 desk pause (Risk Officer, CIO); L2 firm flat-and-halt (Risk Officer; IPS rails); L3 gateway disconnect (Principal). Drilled on every release in paper with `try/finally` semantics.
 
 ## 11. Acceptance scenarios
 
@@ -110,7 +110,7 @@ L1 desk pause (Risk Officerr, CIO); L2 firm flat-and-halt (Risk Officerr; IPS ra
 - **T7** Same-bar tie is a loss in the sim engine.
 - **T8** No LLM client importable from `engine/`.
 - **T9** The last protective orders stand across a service restart and across an `escalated` state.
-- **T10** A rail rejection carries the rail id and reaches the Risk Officerr.
+- **T10** A rail rejection carries the rail id and reaches the Risk Officer.
 - **T11** Rule Watch reloads a new book version within 5 s and produces the protective-order diff.
 - **T12** A judgment condition under Rule Watch governance is marked `judgment_only` and handed to Agent Watch or escalated.
 - **T13** Shadow mode never places a broker order (structural test on the shadow code path) and records would-be actions with timestamps.

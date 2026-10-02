@@ -50,7 +50,7 @@ Exit criterion: one desk trading paper for two weeks with both watch modes runni
 | Task | Feature spec | Requirements | Verification |
 |---|---|---|---|
 | 2.1 Coach role + skills (scoring, coaching, playbook revision with evals, lesson curation) | `023-coach` | DH2-LRN-002, DH2-MEM-003 | S7, L2 |
-| 2.2 Research Lab roles: Quant Researcher, Data Steward, Validation Reviewer, Desk Designer + agentic replay mode | `024-research-lab` | DH2-LRN-003/004/006 | L4; agentic replay report for the first desk |
+| 2.2 Research Lab roles: Quant Researcher, Validation Reviewer, Desk Designer (research-universe data duties stay with the Data Ingestor) + agentic replay mode | `024-research-lab` | DH2-LRN-003/004/006 | L4; agentic replay report for the first desk |
 | 2.3 Skill Engineer role + PR flow with agent review + CI | `025-skill-engineer` | DH2-LRN-005 | S8, L5 |
 | 2.4 Second and third desks chartered on paper from Lab proposals (Event/Catalyst, Intraday Breakout, paper-only (NC-5 decided)) | — | DH2-FIRM-002 | Committee minutes; desks trading paper |
 | 2.4a [P] Jev (TypeSafe System One) evaluation as a judgment instrument for Agent Watch conditions, event triage, catalyst tagging — shadow arm, fail-open, calibration-scored (`docs/decisions/2026-10-02-jev-evaluation.md`) | `025a-jev-instrument` | DH2-LRN-005, DH2-EXEC-002 | ≥ 300 shadow decisions scored; promotion recorded in committee minutes |

@@ -13,17 +13,17 @@
 | 08:10 | `compliance.feeds` | Code + Broker Compliance Officer on change | Surveillance lists, ban list, price bands, MIS list, freeze quantities, calendar refreshed; catalogue diff. |
 | 08:15 | `treasury.plan` | Treasury & Settlement Manager | Margin and cash plan per desk; settlement obligations; funds actions to the Principal. |
 | 08:00 | `desks.ingest` | Data Ingestors | Data packs per stock; quality flags. |
-| 08:30 | `desks.books` | Senior Analysts → Risk Officerr + both Compliance Officers | Strategy books drafted, economically reviewed and pre-cleared (intraday desks daily; swing/positional desks weekly on Monday with daily check-ins). |
+| 08:30 | `desks.books` | Senior Analysts → Risk Officer + both Compliance Officers | Strategy books drafted, economically reviewed and pre-cleared (intraday desks daily; swing/positional desks weekly on Monday with daily check-ins). |
 | 08:45 | `desks.open` | Each desk (Senior Analyst chairs) | Desk meeting per charter: emphasis, escalation policy, template notes. |
 | 09:00 | `firm.open` | CIO shift (short) | Confirms desks armed, allocations and budgets applied, rails status; journal opening note. |
-| 09:15–15:30 | `market.session` | Code + roles on events | Feature service every minute; Rule Watch per tick; Agent Watch sessions per CIO cap; Execution Agents on events; Analysts on escalations (90 s) and revision requests; Scanners' intraday re-scans per charter; Risk Officerr reviews (120 s) and sweeps every 30 min. |
+| 09:15–15:30 | `market.session` | Code + roles on events | Feature service every minute; Rule Watch per tick; Agent Watch sessions per CIO cap; Execution Agents on events; Analysts on escalations (90 s) and revision requests; Scanners' intraday re-scans per charter; Risk Officer reviews (120 s) and sweeps every 30 min. |
 | per charter (default every 60–90 min) | `desks.recalibrate` | Recalibration Agents | Intraday pass: family stats, regime, revision requests. |
 | every 1–5 min | `compliance.surveil` | Detectors → Compliance Officers on alert | OTR, cancel ratios, self-match, volume share, closing window, position limits, RMS bursts; holds. |
 | every 5 min | `treasury.peak` | Detector → Treasury on breach | Peak-margin headroom incl. MTM; reduce requests. |
 | 14:45 | `carry.window` | Execution Agents per book rules; Analysts on escalation | Carries only as the book specifies; uncovered cases escalate (moved from 15:00: CAS stocks auto-square at 15:12 and enter the closing auction at 15:15). |
 | 15:00 | `squareoff.cas` | Code | MIS flatten for F&O-segment (CAS) stocks not converted/exited; verification 15:05/15:08 (Zerodha auto-squares at 15:12; cash CAS opens 15:15 with no new orders until 15:20). |
 | 15:15 | `squareoff.rest` | Code | MIS flatten for non-CAS stocks and index futures; verification 15:20/15:23 (broker backstops 15:25/15:26). |
-| 15:35 | `eod.reconcile` | Code + Books & Records | Final reconciliation; breaks → Books & Records disposition, Risk Officerr, Ops. |
+| 15:35 | `eod.reconcile` | Code + Books & Records | Final reconciliation; breaks → Books & Records disposition, Risk Officer, Ops. |
 | 16:00 | `accounting.close` | Code | Fills, costs, R, counterfactuals, desk and firm rollups, decision scores. |
 | 16:05 | `compliance.close` | Both Compliance Officers + Books & Records | EOD compliance close; P&L attribution; tax ledger; expected penalties (with Treasury). |
 | 16:20 | `tca.daily` | Execution Quality Analyst | Implementation shortfall per fill; recommendations. |
@@ -77,7 +77,7 @@ Everything else is decided by agents and reported.
 | Reconciliation | mismatch | Re-run | Risk Officer + Ops incident |
 | Order-rate usage | > 80 % sustained 10 s | Queue/pace | Alert at > 95 % |
 | Protective orders | missing > 30 s | Re-place | Incident |
-| Feature health | failed test | Withhold and inform agents | Data Steward |
+| Feature health | failed test | Withhold and inform agents | Data Ingestor |
 | IPS proximity | ≥ 80 % of any limit | — | Risk Officer notice + Principal alert |
 | Reconciliation break | any | Hold new book approvals | Books & Records + Principal (S13) |
 | OTR | ≥ 40 per segment | Alert | Regulatory Compliance Officer; hold at 200 |

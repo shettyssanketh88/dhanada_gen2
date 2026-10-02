@@ -17,7 +17,7 @@ For every decision recorded on a dossier:
 | Score | Definition |
 |---|---|
 | Calibration | Stated probability vs outcome (Brier, reliability by bucket) and expected R vs realised R, per role, desk, regime, horizon, with n and CIs |
-| Counterfactual delta | Realised R minus each baseline: `no_trade` (0), `per_book_version` (each version that governed, replayed over the trade's bars — scores recalibration and escalation resolutions), `per_watch_mode` (the shadow mode's would-be actions simulated), `unmodified_by_risk` (where the Risk Officerr modified), `desk_registered` baselines |
+| Counterfactual delta | Realised R minus each baseline: `no_trade` (0), `per_book_version` (each version that governed, replayed over the trade's bars — scores recalibration and escalation resolutions), `per_watch_mode` (the shadow mode's would-be actions simulated), `unmodified_by_risk` (where the Risk Officer modified), `desk_registered` baselines |
 | Process adherence | Playbook checklist items evidenced in the section (instruments cited, invalidation stated, forecast given) — computed by a deterministic checker plus an LLM-judge pass (Coach) calibrated against the Principal's spot checks |
 | Cost discipline | Plan's stated cost per R vs realised |
 | Timeliness | Response latency to events while owning a state |

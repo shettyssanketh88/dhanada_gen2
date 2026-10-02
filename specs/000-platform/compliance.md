@@ -19,7 +19,7 @@ Real regulated firms split compliance into a **pre-trade function**, a **surveil
 | Signal provenance (PIT) | Regulatory Compliance Officer | Every feature from text carries `source_ref` and `published_at`; unverified sources are tagged and cannot be used in `applies_when` |
 | Broker operating model | Broker Compliance Officer | `rails/broker-confirmation.md`: static IP, market protection, < 10 OPS, daily 2FA login — confirmed by Zerodha 2026-09-21; re-confirmed annually |
 
-Accountability: the **CIO is the principal officer**; the officers report to the CIO and to the Principal (digest). Independence: the officers never author books or place orders; the Execution Agent cannot bypass a rail; the Risk Officerr reviews economics, the officers review legality and broker mechanics — three separate approvals on every book version.
+Accountability: the **CIO is the principal officer**; the officers report to the CIO and to the Principal (digest). Independence: the officers never author books or place orders; the Execution Agent cannot bypass a rail; the Risk Officer reviews economics, the officers review legality and broker mechanics — three separate approvals on every book version.
 
 ## 2. The two officers
 
@@ -47,11 +47,11 @@ Both officers also sit on the investment committee for any desk charter (a chart
 
 ## 3. Book pre-clearance
 
-After the Senior Analyst drafts a version and before the Risk Officerr's economic review (or in parallel, both required):
+After the Senior Analyst drafts a version and before the Risk Officer's economic review (or in parallel, both required):
 
 1. `compliance:preclear(book_version)` runs the crisp checks per strategy and returns findings: product allowed for the instrument and surveillance status (A7/B3/B4), session and validity windows (A16/B1), lot/freeze/band feasibility (A8/A15/B7), margin and cash-collateral feasibility at the strategy's size (A10/B2/B9), PFUTP patterns (would the entry and protective orders create a self-match across desks on the same PAN? does the strategy's order pattern resemble layering?) (A6/B10), provenance of any text-derived condition (A9), expiry and physical-settlement exposure (A12), position-limit headroom (A13/A14), estimated OTR contribution (A5).
 2. Each officer decides per strategy: `clear`, `clear_with_conditions` (e.g., "CNC only", "no orders after 15:05", "size ≤ x % of ADV"), or `block` with the rule ids. Conditions become part of the book version and are enforced by the pre-order rail.
-3. A book governs only when Risk Officerr + both officers have cleared at least one strategy. Auto-clearance rules the officers define (within their catalogue) let intraday revisions proceed without a fresh session; auto-clearances are recorded as the officer's decisions.
+3. A book governs only when Risk Officer + both officers have cleared at least one strategy. Auto-clearance rules the officers define (within their catalogue) let intraday revisions proceed without a fresh session; auto-clearances are recorded as the officer's decisions.
 
 ## 4. Pre-order rail (code)
 
@@ -89,7 +89,7 @@ Orders, fills, decisions, book versions, invocations, rail events, alerts and di
 |---|---|
 | NC-7 | **Resolved 2026-09-21.** The Principal holds Zerodha's written confirmation that automated trading via Kite Connect is permitted for an individual without further approval under four constraints: whitelisted static IP for order endpoints, `market_protection` on every MARKET/SL-M order, under 10 orders per second (no algorithm registration needed below it), and daily OAuth login with 2FA/TOTP. The text and the resulting rails are in `rails/broker-confirmation.md`; `broker.terms_confirmed = true`. The older terms-of-use wording (B6) is superseded. |
 | NC-8 | **Resolved 2026-09-21** (`docs/research/2026-09-21-regulatory-verification.md`): 10 OPS is NSE's standard (SEBI delegates); NSE audit trail ≥ 5 years; freeze limits and lots verified; no intraday futures cap, options limits at PAN level; F&O closes 15:40 and cash CAS 15:15–15:35 since 3 Aug 2026 — square-off schedule updated. Secondary-only residue: STT rates, 7-Sep-2026 pre-open detail. |
-| NC-9 | Whether to adopt 8-year retention (proposed) or the 5-year minimum. |
+| NC-9 | **Resolved 2026-09-21** (`docs/decisions/2026-09-21-open-items.md` §7): 8-year retention adopted; encoded as `records.retention_years: 8` in the proposed IPS. |
 
 ## 9. Acceptance scenarios
 

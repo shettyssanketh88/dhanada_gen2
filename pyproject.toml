@@ -1,0 +1,38 @@
+[project]
+name = "dhanada"
+version = "0.0.0"
+description = "Dhanada v2 — an AI-run investment firm: instruments, execution service and agent runtime."
+requires-python = ">=3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "mypy>=1.11",
+    "pytest>=8.3",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501", "RUF001", "RUF002", "RUF003"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = ["engine", "runtime", "contracts", "tests", "scripts", ".specify/scripts"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "--strict-markers --cov=engine --cov=runtime --cov=contracts --cov-report=term --cov-report=json:coverage.json"
+
+[tool.coverage.run]
+branch = false

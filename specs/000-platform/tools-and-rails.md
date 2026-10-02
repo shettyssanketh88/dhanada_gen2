@@ -35,6 +35,23 @@ Each feature has a definition file, unit tests, a health test (not constant, not
 
 **Expression language**: boolean combinations (`AND`, `OR`, `NOT`), comparisons, arithmetic, `crosses_above(x, level)`, `crosses_below`, `touches(x, level, tolerance)`, `time_in`, and named features. Parsed and type-checked at book validation; evaluated deterministically by Rule Watch.
 
+### 2a. Universe screen (`engine/screen/`)
+
+Agents never see thousands of stocks. Code narrows them in stages and agents work only on the last few names:
+
+| Stage | Who | Size | Cost |
+|---|---|---|---|
+| Listed universe | — | ~2,300 NSE names | — |
+| IPS eligibility (ADV, price, surveillance and ban lists, no stock F&O, product permissions) | Code | ~400–500 | negligible |
+| Feature computation for every eligible name, nightly and at pre-open | Code | ~400–500 | negligible |
+| Screen output per desk charter (movers, volume anomalies, trend/range breaks, fresh catalysts, relative strength), ranked | Code | ~30–60 | negligible |
+| Watchlist (picks, reasons, priority) | Stock Scanner (agent) | ~10–15 | model cost starts here |
+| Books, reviews, clearances | Analyst, Risk, Compliance (agents) | ~5–10 | model cost |
+| Triggers checked every minute | Rule Watch (code) | watchlist | negligible |
+| Trades taken | Execution Agent | ~1–5 | model cost per event |
+
+Each desk's charter picks its screens (positional momentum: 3–6 month relative strength; intraday breakout: opening volume anomalies; catalyst: fresh announcements). The Scanner can ask for a new screen through the Skill Engineer. Limit: a stock that no screen surfaces is never seen; scan quality is therefore scored by the Trade Reviewer and screens are revised by the Coach and Recalibration Agent from those scores.
+
 ## 3. Watch modes (`engine/watch/` and the Execution Agent's skill)
 
 ### 3.1 Rule Watch (deterministic evaluator)

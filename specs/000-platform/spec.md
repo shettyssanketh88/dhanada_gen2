@@ -162,6 +162,8 @@ Unchanged from v2.0 except:
 
 - **DH2-TOOL-007** THE SYSTEM SHALL provide a **feature service** computing the named features of the expression language every minute for all watched stocks, with health tests, and SHALL expose them to both watch modes and to the Analyst's calculators.
 - **DH2-TOOL-008** THE SYSTEM SHALL provide `books:*` tools (draft, revise, review, load, retire, request_revision) and `watch:*` tools (arm, reload, status, shadow_report).
+- **DH2-TOOL-009** THE SYSTEM SHALL provide a **universe screen** instrument that, nightly and at pre-open, applies the IPS eligibility rails (minimum ADV, minimum price, surveillance and ban lists, product permissions) to the full listed universe, computes the feature set for every eligible name, and publishes a ranked screen output per desk charter (movers, volume anomalies, trend and range breaks, fresh catalysts, relative strength) to the Stock Scanner; WHEN the Stock Scanner requests a new screen, THE SYSTEM SHALL route it to the Skill Engineer, and the Trade Reviewer SHALL score scan quality so weak screens surface as weak picks.
+- **DH2-TOOL-010** THE SYSTEM SHALL bound agent work by the watchlist, not the universe: the model cost per day SHALL scale with the number of watchlist names and the desk's `agent_watch_max_stocks`, and the desk charter SHALL set the maximum watchlist size within the IPS.
 - **DH2-COST-003** THE SYSTEM SHALL cost Agent Watch per stock-day and enforce a per-desk cap on concurrent Agent Watch sessions set by the CIO within the IPS budget.
 
 ## 8. Acceptance scenarios

@@ -34,7 +34,7 @@ The Recalibration Agent is the "monitor and recalibrate" role the Principal aske
 
 ## 3. One stock, one day (RELIANCE, a Tuesday)
 
-**07:45 — Stock Scanner.** Scans the NIFTY-500 with structure, volatility, liquidity and catalyst tools. Picks 12 names. For RELIANCE it records: "15-minute trend up for three sessions; consolidating under 2,960 (20-day high); relative volume 1.4× yesterday; Q2 results on Thursday (event inside horizon); options OI building at 3,000." Priority: high. Writes `sections/scanner.md` on a new dossier for RELIANCE/today.
+**07:45 — Stock Scanner.** Starts from the universe screen (code has already filtered ~2,300 listed names to ~450 eligible ones, computed features for all of them, and ranked ~40 candidates for this desk's charter; see `tools-and-rails.md` §2a), then applies judgment with the structure, volatility, liquidity and catalyst tools. Picks 12 names. For RELIANCE it records: "15-minute trend up for three sessions; consolidating under 2,960 (20-day high); relative volume 1.4× yesterday; Q2 results on Thursday (event inside horizon); options OI building at 3,000." Priority: high. Writes `sections/scanner.md` on a new dossier for RELIANCE/today.
 
 **08:00 — Data Ingestor.** Builds the data pack: 1-minute, 15-minute and daily bars (with real volume), depth snapshot, volume profile for the last 20 sessions, sector and NIFTY context, futures basis, options OI by strike, the results date, last three announcements with `published_at`, corporate actions (none). Runs quality checks: flags that 1-minute bars for 2026-09-12 have a gap (holiday? no — feed outage); marks the gap and excludes that day from any intraday statistic. Writes `sections/data_ingestor.md` and links the pack.
 

@@ -37,6 +37,7 @@ Rules: prompts assembled by scripts contain no anchoring numbers from the system
 | Role | Skill | Purpose | Scripts |
 |---|---|---|---|
 | Stock Scanner | `scanning-market` | Scan the desk universe with structure/volatility/liquidity/catalyst/flow tools; pick stocks with reasons | `scan_context.py`, `watchlist.py validate|set` |
+| Stock Scanner | `requesting-screens` | Read the universe screen output; ask the Skill Engineer for a new or modified screen with evidence from scan-quality scores | `screen_output.py`, `screen_request.py` |
 | Stock Scanner | `prioritising-watchlist` | Priority and horizon hints; intraday additions/removals | `watchlist.py` |
 | Data Ingestor | `building-data-packs` | Select sources and granularity; assemble the pack; flag quality issues and excluded windows | `datapack.py build|validate`, `dq.py` |
 | Data Ingestor | `checking-data-quality` | Nightly DQ for the research universe; feature health | `dq.py` |
